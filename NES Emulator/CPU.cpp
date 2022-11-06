@@ -66,11 +66,17 @@ void CPU::TAY()
 }
 
 void CPU::INY()
-{
+{	
+	_regStatus = ++_regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regStatus = (_regY & 0b10000000) ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::INX()
 {
+	_regStatus = ++_regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regStatus = (_regX & 0b10000000) ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::JMP()

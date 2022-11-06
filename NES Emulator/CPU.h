@@ -1,12 +1,29 @@
 #pragma once
 #include <cstdint>
+#include <functional>
+#include <string>
+#include "Bus.h"
 
 class CPU
 {
 public:
-	CPU();
+	CPU(Bus& bus)
+		: _bus(bus)
+	{}
 
-	void clock();
+	void Clock();
+
+	void Fetch();
+
+public:
+	struct Instruction
+	{
+		std::string name;
+		std::function<void()> func;
+		std::function<uint8_t()> addrMode;
+		int nCycles;
+	};
+
 
 // CPU instructions
 private:
@@ -20,12 +37,8 @@ private:
 	void CPY();
 	void CPX();
 
-	void NOP();
 	void BIT();
 	void STY();
-	void LDY();
-	void CPY();
-	void CPX();
 	
 	void PHP();
 	void PLP();
@@ -101,12 +114,12 @@ private:
 	void ARR();
 	void XAA();
 	void AXS();
-	void SBC();
 
 	void AHX();
 	
 	void TAS();
 	void LAS();
+
 private:
 
 	// CPU registers
@@ -117,6 +130,18 @@ private:
 	uint8_t _regPC;
 	uint8_t _regStatus;
 
+private:
+	Bus& _bus;
+
+private:
+	static constexpr uint8_t STATUS_N = 0b10000000;
+	static constexpr uint8_t STATUS_V = 0b01000000;
+	static constexpr uint8_t STATUS_5 = 0b00100000;
+	static constexpr uint8_t STATUS_4 = 0b00010000;
+	static constexpr uint8_t STATUS_D = 0b00001000;
+	static constexpr uint8_t STATUS_I = 0b00000100;
+	static constexpr uint8_t STATUS_Z = 0b00000010;
+	static constexpr uint8_t STATUS_C = 0b00000001;
 public:
 	static constexpr uint16_t RESET_VECTOR = 0xfffc;
 
