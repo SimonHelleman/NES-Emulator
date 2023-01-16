@@ -1,29 +1,25 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 #include <functional>
-#include <string>
-#include "Bus.h"
+#include "MemoryMap.h"
 
 class CPU
 {
 public:
-	CPU(Bus& bus)
-		: _bus(bus)
-	{}
+	CPU(MemoryMap& memory);
 
 	void Clock();
-
 	void Fetch();
+	void Reset();
 
-public:
-	struct Instruction
+	static struct Opcode
 	{
-		std::string name;
-		std::function<void()> func;
-		std::function<uint8_t()> addrMode;
-		int nCycles;
+		const char* mnemonic;
+		std::function<void(CPU*)> addrMode;
+		std::function<void(CPU*)> operation;
+		int clockCycles;
 	};
-
 
 // CPU instructions
 private:
@@ -69,8 +65,6 @@ private:
 	void CLD();
 	void SED();
 
-	void SHY();
-
 	void ORA();
 	void AND();
 	void EOR();
@@ -80,7 +74,6 @@ private:
 	void CMP();
 	void SBC();
 
-	void STP();
 	void LDX();
 	
 	void ASL();
@@ -98,8 +91,6 @@ private:
 	void TXS();
 	void TSX();
 
-	void SHX();
-
 	void SLO();
 	void RLA();
 	void SRE();
@@ -112,13 +103,25 @@ private:
 	void ANC();
 	void ALR();
 	void ARR();
-	void XAA();
 	void AXS();
 
-	void AHX();
-	
-	void TAS();
-	void LAS();
+private:
+
+	// CPU Addressing Modes
+	void Accumulator();
+	void Immediate();
+	void ZeroPage();
+	void ZeroPageIndexedX();
+	void ZeroPageIndexedY();
+	void Absolute();
+	void AbsoluteIndexedX();
+	void AbsoluteIndexedY();
+	void Relative();
+	void Indirect();
+	void IndexedIndirectX();
+	void IndirectIndexedY();
+	void Implied() { }
+
 
 private:
 
@@ -130,10 +133,12 @@ private:
 	uint8_t _regPC;
 	uint8_t _regStatus;
 
-private:
-	Bus& _bus;
+	MemoryMap& _memory;	
+	uint16_t _currentAddr;
+	Opcode* _currentInstruction;
 
-private:
+	std::unique_ptr<Opcode[]> _opcodeMatrix;
+
 	static constexpr uint8_t STATUS_N = 0b10000000;
 	static constexpr uint8_t STATUS_V = 0b01000000;
 	static constexpr uint8_t STATUS_5 = 0b00100000;
@@ -142,8 +147,7 @@ private:
 	static constexpr uint8_t STATUS_I = 0b00000100;
 	static constexpr uint8_t STATUS_Z = 0b00000010;
 	static constexpr uint8_t STATUS_C = 0b00000001;
-public:
-	static constexpr uint16_t RESET_VECTOR = 0xfffc;
 
+	static constexpr uint16_t RESET_VECTOR = 0xfffc;
 };
 
