@@ -286,6 +286,24 @@ CPU::CPU(MemoryMap& memory)
 	// Wow that was a lot
 }
 
+void CPU::Clock()
+{
+}
+
+void CPU::FetchInstruction()
+{
+}
+
+void CPU::Reset()
+{
+	_regStatus = 0x34; // IRQ disable
+	_regA = 0;
+	_regX = 0;
+	_regY = 0;
+	_regSP = 0xfd;
+	_regPC = RESET_VECTOR;
+}
+
 void CPU::BRK()
 {
 }
@@ -308,64 +326,100 @@ void CPU::NOP()
 
 void CPU::BIT()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+	_regStatus = (_regA & target) == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = target & 0b01000000 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
+	_regStatus = target & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::STY()
 {
+	_memory.Write(_currentAddr, _regY);
 }
 
 void CPU::LDY()
 {
+	_regY = _memory.Read(_currentAddr);
+
+	_regStatus = _regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regY & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::CPY()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+
+	_regStatus = _regY >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regY == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = (_regY - target) & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::CPX()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+
+	_regStatus = _regX >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regX == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = (_regX - target) & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::PHP()
 {
+	_memory.Write(0x0100 | _regSP--, _regStatus);
 }
 
 void CPU::PLP()
 {
+	_regStatus = _memory.Read(0x0100 | ++_regSP);
 }
 
 void CPU::PHA()
 {
+	_memory.Write(0x0100 | _regSP--, _regA);
 }
 
 void CPU::PLA()
 {
+	_regA = _memory.Read(0x0100 | ++_regSP);
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::DEY()
 {
+	--_regY;
+
+	_regStatus = _regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regY & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::TAY()
 {
+	_regY = _regA;
+
+	_regStatus = _regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regY & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::INY()
 {	
-	_regStatus = ++_regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	++_regY;
 
-	_regStatus = (_regY & 0b10000000) ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	_regStatus = _regY == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regY & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::INX()
 {
-	_regStatus = ++_regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	++_regX;
 
-	_regStatus = (_regX & 0b10000000) ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	_regStatus = _regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regX & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::JMP()
 {
+	_regPC = _currentAddr;
 }
 
 void CPU::BPL()
@@ -418,6 +472,10 @@ void CPU::SEI()
 
 void CPU::TYA()
 {
+	_regA = _regY;
+
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::CLV()
@@ -434,86 +492,189 @@ void CPU::SED()
 
 void CPU::ORA()
 {
+	_regA |= _memory.Read(_currentAddr);
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::AND()
 {
+	_regA &= _memory.Read(_currentAddr);
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::EOR()
 {
+	_regA ^= _memory.Read(_currentAddr);
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::ADC()
 {
+	int8_t oldA = static_cast<int8_t>(_regA);
+	int8_t addend = static_cast<int8_t>(_memory.Read(_currentAddr));
+	_regA += static_cast<uint8_t>(addend) + (_regStatus & STATUS_C) ? 1 : 0;
+
+	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	
+	// Overflow:
+	//     Case 1 -> neg + neg = pos (both sign bits set but sum sign bit not set) 
+	//     Case 2 -> pos + pos = neg (both sign bits not set but sum sign bit set)
+	bool overflowCase1 = oldA < 0 && addend < 0 && static_cast<int8_t>(_regA) > 0;
+	bool overflowCase2 = oldA > 0 && addend > 0 && static_cast<int8_t>(_regA) < 0;
+	_regStatus = overflowCase1 || overflowCase2 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
+
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::STA()
 {
+	_memory.Write(_currentAddr, _regA);
 }
 
 void CPU::LDA()
 {
+	_regA = _memory.Read(_currentAddr);
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::CMP()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+
+	_regStatus = _regA >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = (_regA - target) & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::SBC()
 {
+	int8_t oldA = static_cast<int8_t>(_regA);
+	int8_t subtrahend = static_cast<int8_t>(_memory.Read(_currentAddr));
+	_regA -= static_cast<uint8_t>(subtrahend) + (_regStatus & STATUS_C) ? 0 : 1;
+
+	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus & ~STATUS_C : _regStatus | STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	bool overflowCase1 = oldA < 0 && subtrahend < 0 && static_cast<int8_t>(_regA) > 0;
+	bool overflowCase2 = oldA > 0 && subtrahend > 0 && static_cast<int8_t>(_regA) < 0;
+	_regStatus = overflowCase1 || overflowCase2 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
+
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::LDX()
 {
+	_regX = _memory.Read(_currentAddr);
+
+	_regStatus = _regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regX & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::ASL()
 {
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regA <<= 1;
+
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::ROL()
 {
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regA <<= 1;
+
+	_regA |= _regStatus & STATUS_C;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::LSR()
 {
+	_regStatus = _regA & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regA >>= 1;
+
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::ROR()
 {
+	_regStatus = _regA & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	_regA >>= 1;
+	_regA |= (_regStatus & STATUS_C) << 7;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::STX()
 {
+	_memory.Write(_currentAddr, _regX);
 }
 
 void CPU::DEC()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+
+	_memory.Write(_currentAddr, --target);
+
+	_regStatus = target == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = target & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::INC()
 {
+	uint8_t target = _memory.Read(_currentAddr);
+	
+	_memory.Write(_currentAddr, ++target);
+
+	_regStatus = target == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = target & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::TXA()
 {
+	_regA = _regX;
+
+	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::TAX()
 {
+	_regX = _regA;
+
+	_regStatus = _regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regX & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::DEX()
 {
+	--_regX;
+
+	_regStatus = _regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regX & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::TXS()
 {
+	_regSP = _regX;
 }
 
 void CPU::TSX()
 {
+	_regX = _regSP;
+	_regStatus = _regX == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = _regX & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 }
 
 void CPU::SLO()
@@ -564,40 +725,71 @@ void CPU::AXS()
 {
 }
 
+// TODO: Come back to me
+
 void CPU::Accumulator()
 {
 }
 
 void CPU::Immediate()
 {
+	_currentAddr = _regPC++;
 }
 
 void CPU::ZeroPage()
 {
+	_currentAddr = _memory.Read(_regPC++);
 }
 
 void CPU::ZeroPageIndexedX()
 {
+	_currentAddr = _memory.Read(_regPC++) + _regX;
 }
 
 void CPU::ZeroPageIndexedY()
 {
+	_currentAddr = _memory.Read(_regPC++) + _regY;
 }
 
 void CPU::Absolute()
 {
+	uint8_t addrHigh = _memory.Read(_regPC++);
+	uint8_t addrLow = _memory.Read(_regPC++);
+
+	_currentAddr = addrHigh << 8 | addrLow;
 }
 
 void CPU::AbsoluteIndexedX()
 {
+	uint8_t addrHigh = _memory.Read(_regPC++);
+	uint8_t addrLow = _memory.Read(_regPC++);
+
+	_currentAddr = (addrHigh << 8 | addrLow) + _regX;
+
+	// Crossed a page boundary
+	if ((_currentAddr & 0xff00) >> 8 != addrHigh)
+	{
+		++(_currentInstruction->clockCycles);
+	}
 }
 
 void CPU::AbsoluteIndexedY()
 {
+	uint8_t addrHigh = _memory.Read(_regPC++);
+	uint8_t addrLow = _memory.Read(_regPC++);
+
+	_currentAddr = (addrHigh << 8 | addrLow) + _regY;
+
+	// Crossed a page boundary, add the oops cycle
+	if ((_currentAddr & 0xff00) >> 8 != addrHigh)
+	{
+		++(_currentInstruction->clockCycles);
+	}
 }
 
 void CPU::Relative()
 {
+	_branchOffset = _memory.Read(_regPC++);
 }
 
 void CPU::Indirect()

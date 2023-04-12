@@ -10,7 +10,7 @@ public:
 	CPU(MemoryMap& memory);
 
 	void Clock();
-	void Fetch();
+	void FetchInstruction();
 	void Reset();
 
 	static struct Opcode
@@ -130,11 +130,13 @@ private:
 	uint8_t _regY;
 	uint8_t _regA;
 	uint8_t _regSP;
-	uint8_t _regPC;
 	uint8_t _regStatus;
+	uint16_t _regPC;
 
-	MemoryMap& _memory;	
+	MemoryMap& _memory;
+
 	uint16_t _currentAddr;
+	int8_t _branchOffset;
 	Opcode* _currentInstruction;
 
 	std::unique_ptr<Opcode[]> _opcodeMatrix;
@@ -143,7 +145,7 @@ private:
 	static constexpr uint8_t STATUS_V = 0b01000000;
 	static constexpr uint8_t STATUS_5 = 0b00100000;
 	static constexpr uint8_t STATUS_4 = 0b00010000;
-	static constexpr uint8_t STATUS_D = 0b00001000;
+	static constexpr uint8_t STATUS_D = 0b00001000; // NES didn't have decimal mode -> not implementing
 	static constexpr uint8_t STATUS_I = 0b00000100;
 	static constexpr uint8_t STATUS_Z = 0b00000010;
 	static constexpr uint8_t STATUS_C = 0b00000001;
