@@ -310,6 +310,11 @@ void CPU::BRK()
 
 void CPU::JSR()
 {
+	// Push return address to stack
+	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
+	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
+
+	_regPC = _currentAddr;
 }
 
 void CPU::RTI()
@@ -318,6 +323,10 @@ void CPU::RTI()
 
 void CPU::RTS()
 {
+	uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
+	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
+
+	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
 }
 
 void CPU::NOP()
