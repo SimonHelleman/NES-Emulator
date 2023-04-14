@@ -304,8 +304,21 @@ void CPU::Reset()
 	_regPC = RESET_VECTOR;
 }
 
+void TriggerIRQ()
+{
+}
+
+void TriggerNMI()
+{
+}
+
 void CPU::BRK()
 {
+	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
+	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
+
+	_regStatus |= STATUS_B;
+	_regPC = IRQ_VECTOR;
 }
 
 void CPU::JSR()
@@ -313,12 +326,18 @@ void CPU::JSR()
 	// Push return address to stack
 	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
 	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
+	_memory.Write(0x0100 | _regSP--, _regStatus);
 
 	_regPC = _currentAddr;
 }
 
 void CPU::RTI()
 {
+	_regStatus = _memory.Read(0x100 | ++_regSP);
+	uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
+	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
+
+	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
 }
 
 void CPU::RTS()
@@ -433,50 +452,86 @@ void CPU::JMP()
 
 void CPU::BPL()
 {
+	if (!(_regStatus & STATUS_N))
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BMI()
 {
+	if (_regStatus & STATUS_N)
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BVC()
 {
+	if (!(_regStatus & STATUS_V))
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BVS()
 {
+	if (_regStatus & STATUS_V)
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BCC()
 {
+	if (!(_regStatus & STATUS_C))
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BCS()
 {
+	if (_regStatus & STATUS_C)
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BNE()
 {
+	if (!(_regStatus & STATUS_Z))
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::BEQ()
 {
+	if (_regStatus & STATUS_Z)
+	{
+		_regPC += _branchOffset;
+	}
 }
 
 void CPU::CLC()
 {
+	_regStatus &= ~STATUS_C;
 }
 
 void CPU::SEC()
 {
+	_regStatus |= STATUS_C;
 }
 
 void CPU::CLI()
 {
+	_regStatus &= ~STATUS_I;
 }
 
 void CPU::SEI()
 {
+	_regStatus |= STATUS_I;
 }
 
 void CPU::TYA()
@@ -489,14 +544,17 @@ void CPU::TYA()
 
 void CPU::CLV()
 {
+	_regStatus &= ~STATUS_V;
 }
 
 void CPU::CLD()
 {
+	_regStatus &= ~STATUS_D;
 }
 
 void CPU::SED()
 {
+	_regStatus |= STATUS_D;
 }
 
 void CPU::ORA()

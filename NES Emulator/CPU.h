@@ -13,6 +13,9 @@ public:
 	void FetchInstruction();
 	void Reset();
 
+	void TriggerIRQ();
+	void TriggerNMI();
+
 	static struct Opcode
 	{
 		const char* mnemonic;
@@ -144,12 +147,13 @@ private:
 	static constexpr uint8_t STATUS_N = 0b10000000;
 	static constexpr uint8_t STATUS_V = 0b01000000;
 	static constexpr uint8_t STATUS_5 = 0b00100000;
-	static constexpr uint8_t STATUS_4 = 0b00010000;
+	static constexpr uint8_t STATUS_B = 0b00010000;
 	static constexpr uint8_t STATUS_D = 0b00001000; // NES didn't have decimal mode -> not implementing
 	static constexpr uint8_t STATUS_I = 0b00000100;
 	static constexpr uint8_t STATUS_Z = 0b00000010;
 	static constexpr uint8_t STATUS_C = 0b00000001;
 
 	static constexpr uint16_t RESET_VECTOR = 0xfffc;
+	static constexpr uint16_t IRQ_VECTOR = 0xfffe;
 };
 
