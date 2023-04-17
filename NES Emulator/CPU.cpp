@@ -288,10 +288,43 @@ CPU::CPU(MemoryMap& memory)
 
 void CPU::Clock()
 {
+	if (_currentState == State::Ready)
+	{
+		FetchInstruction();
+		_currentState = State::AddressingMode;
+		return;
+	}
+
+	if (_currentState == State::AddressingMode)
+	{
+		_currentInstruction.addrMode(this);
+		_currentState == State::Execute;
+		return;
+	}
+
+	if (_currentState == State::Execute)
+	{
+		if (_currentInstruction.clockCycles > 0)
+		{
+			--_currentInstruction.clockCycles;
+			return;
+		}
+		else
+		{
+			_currentInstruction.operation(this);
+			_currentState = State::Ready;
+		}
+	}
 }
 
 void CPU::FetchInstruction()
 {
+	uint8_t opcode = _memory.Read(_regPC);
+
+	// The copy is intentional since operations
+	// that need more than one clock cycle will modify
+	// the cycle count
+	_currentInstruction = _opcodeMatrix[opcode];
 }
 
 void CPU::Reset()
@@ -836,7 +869,7 @@ void CPU::AbsoluteIndexedX()
 	// Crossed a page boundary
 	if ((_currentAddr & 0xff00) >> 8 != addrHigh)
 	{
-		++(_currentInstruction->clockCycles);
+		++(_currentInstruction.clockCycles);
 	}
 }
 
@@ -850,7 +883,7 @@ void CPU::AbsoluteIndexedY()
 	// Crossed a page boundary, add the oops cycle
 	if ((_currentAddr & 0xff00) >> 8 != addrHigh)
 	{
-		++(_currentInstruction->clockCycles);
+		++(_currentInstruction.clockCycles);
 	}
 }
 

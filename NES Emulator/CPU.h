@@ -24,6 +24,14 @@ public:
 		int clockCycles;
 	};
 
+private:
+	static enum class State
+	{
+		Ready,
+		AddressingMode,
+		Execute
+	};
+
 // CPU instructions
 private:
 
@@ -140,8 +148,8 @@ private:
 
 	uint16_t _currentAddr;
 	int8_t _branchOffset;
-	Opcode* _currentInstruction;
-
+	Opcode _currentInstruction;
+	State _currentState = State::READY;
 	std::unique_ptr<Opcode[]> _opcodeMatrix;
 
 	static constexpr uint8_t STATUS_N = 0b10000000;
