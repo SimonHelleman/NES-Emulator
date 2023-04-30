@@ -13,8 +13,17 @@ public:
 	void FetchInstruction();
 	void Reset();
 
-	void TriggerIRQ();
-	void TriggerNMI();
+	void HandleNMI();
+
+	void SetIRQPin(bool b)
+	{
+		_doIRQ = b;
+	}
+
+	void SetNMIPin(bool b)
+	{
+		_doNMI = b;
+	}
 
 	static struct Opcode
 	{
@@ -27,7 +36,7 @@ public:
 private:
 	static enum class State
 	{
-		Ready,
+		Fetch,
 		AddressingMode,
 		Execute
 	};
@@ -137,19 +146,24 @@ private:
 private:
 
 	// CPU registers
-	uint8_t _regX;
-	uint8_t _regY;
-	uint8_t _regA;
-	uint8_t _regSP;
-	uint8_t _regStatus;
-	uint16_t _regPC;
+	uint8_t _regX = 0;
+	uint8_t _regY = 0;
+	uint8_t _regA = 0;
+	uint8_t _regSP = 0;
+	uint8_t _regStatus = 0;
+	uint16_t _regPC = 0;
 
 	MemoryMap& _memory;
+	bool _doIRQ = false;
+	bool _doNMI = false;
+	bool _isAccumOpcode = false;
 
-	uint16_t _currentAddr;
-	int8_t _branchOffset;
-	Opcode _currentInstruction;
-	State _currentState = State::READY;
+	bool _isIRQPending = false;
+
+	uint16_t _currentAddr = 0;
+	int8_t _branchOffset = 0;
+	Opcode _currentInstruction = { 0 };
+	State _currentState = State::Fetch;
 	std::unique_ptr<Opcode[]> _opcodeMatrix;
 
 	static constexpr uint8_t STATUS_N = 0b10000000;
@@ -161,6 +175,7 @@ private:
 	static constexpr uint8_t STATUS_Z = 0b00000010;
 	static constexpr uint8_t STATUS_C = 0b00000001;
 
+	static constexpr uint16_t NMI_VECTOR = 0xfffa;
 	static constexpr uint16_t RESET_VECTOR = 0xfffc;
 	static constexpr uint16_t IRQ_VECTOR = 0xfffe;
 };

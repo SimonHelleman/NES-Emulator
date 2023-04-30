@@ -288,8 +288,19 @@ CPU::CPU(MemoryMap& memory)
 
 void CPU::Clock()
 {
-	if (_currentState == State::Ready)
+	if (_currentState == State::Fetch)
 	{
+		if (_doNMI)
+		{
+			_isIRQPending = _doIRQ && STATUS_I;
+			HandleNMI();
+		}
+		else if ((_doIRQ && STATUS_I) || _isIRQPending)
+		{
+			BRK();
+			_isIRQPending = false;
+		}
+
 		FetchInstruction();
 		_currentState = State::AddressingMode;
 		return;
@@ -298,8 +309,7 @@ void CPU::Clock()
 	if (_currentState == State::AddressingMode)
 	{
 		_currentInstruction.addrMode(this);
-		_currentState == State::Execute;
-		return;
+		_currentState = State::Execute;
 	}
 
 	if (_currentState == State::Execute)
@@ -309,40 +319,49 @@ void CPU::Clock()
 			--_currentInstruction.clockCycles;
 			return;
 		}
-		else
-		{
-			_currentInstruction.operation(this);
-			_currentState = State::Ready;
-		}
+
+		_currentInstruction.operation(this);
+		_currentState = State::Fetch;
 	}
 }
 
 void CPU::FetchInstruction()
 {
-	uint8_t opcode = _memory.Read(_regPC);
+	uint8_t opcode = _memory.Read(_regPC++);
 
 	// The copy is intentional since operations
 	// that need more than one clock cycle will modify
 	// the cycle count
 	_currentInstruction = _opcodeMatrix[opcode];
+
+	if (_doNMI || (_doIRQ && STATUS_I))
+	{
+		_currentInstruction.clockCycles += 2;
+	}
 }
 
 void CPU::Reset()
 {
-	_regStatus = 0x34; // IRQ disable
+	_regStatus = 0;
+	_regStatus = STATUS_5 | STATUS_B | STATUS_I;
 	_regA = 0;
 	_regX = 0;
 	_regY = 0;
 	_regSP = 0xfd;
 	_regPC = RESET_VECTOR;
+	_currentInstruction = _opcodeMatrix[0x4c];
+	_currentState = State::AddressingMode;
 }
 
-void TriggerIRQ()
+void CPU::HandleNMI()
 {
-}
+	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
+	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
 
-void TriggerNMI()
-{
+
+	_regPC = NMI_VECTOR;
+
+	_doNMI = false;
 }
 
 void CPU::BRK()
@@ -371,6 +390,7 @@ void CPU::RTI()
 	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
 
 	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
+
 }
 
 void CPU::RTS()
@@ -677,43 +697,86 @@ void CPU::LDX()
 
 void CPU::ASL()
 {
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
-	_regA <<= 1;
+	val <<= 1;
 
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+
+	if (_isAccumOpcode)
+	{
+		_regA = val;
+		_isAccumOpcode = false;
+		return;
+	}
+
+	_memory.Write(_currentAddr, val);
 }
 
 void CPU::ROL()
 {
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
-	_regA <<= 1;
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
-	_regA |= _regStatus & STATUS_C;
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	val <<= 1;
+
+	val |= _regStatus & STATUS_C;
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+
+	if (_isAccumOpcode)
+	{
+		_regA = val;
+		_isAccumOpcode = false;
+		return;
+	}
+
+	_memory.Write(_currentAddr, val);
 }
 
 void CPU::LSR()
 {
-	_regStatus = _regA & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
-	_regA >>= 1;
+	_regStatus = val & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	val >>= 1;
+
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+
+	if (_isAccumOpcode)
+	{
+		_regA = val;
+		_isAccumOpcode = false;
+		return;
+	}
+
+	_memory.Write(_currentAddr, val);
 }
 
 void CPU::ROR()
 {
-	_regStatus = _regA & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
-	_regA >>= 1;
-	_regA |= (_regStatus & STATUS_C) << 7;
-	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+	_regStatus = val & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+
+	val >>= 1;
+	val |= (_regStatus & STATUS_C) << 7;
+	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
+
+	if (_isAccumOpcode)
+	{
+		_regA = val;
+		_isAccumOpcode = false;
+		return;
+	}
+
+	_memory.Write(_currentAddr, val);
 }
 
 void CPU::STX()
@@ -825,10 +888,9 @@ void CPU::AXS()
 {
 }
 
-// TODO: Come back to me
-
 void CPU::Accumulator()
 {
+	_isAccumOpcode = true;
 }
 
 void CPU::Immediate()
@@ -853,16 +915,16 @@ void CPU::ZeroPageIndexedY()
 
 void CPU::Absolute()
 {
-	uint8_t addrHigh = _memory.Read(_regPC++);
 	uint8_t addrLow = _memory.Read(_regPC++);
+	uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = addrHigh << 8 | addrLow;
 }
 
 void CPU::AbsoluteIndexedX()
 {
-	uint8_t addrHigh = _memory.Read(_regPC++);
 	uint8_t addrLow = _memory.Read(_regPC++);
+	uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = (addrHigh << 8 | addrLow) + _regX;
 
@@ -875,8 +937,8 @@ void CPU::AbsoluteIndexedX()
 
 void CPU::AbsoluteIndexedY()
 {
-	uint8_t addrHigh = _memory.Read(_regPC++);
 	uint8_t addrLow = _memory.Read(_regPC++);
+	uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = (addrHigh << 8 | addrLow) + _regY;
 
@@ -894,12 +956,31 @@ void CPU::Relative()
 
 void CPU::Indirect()
 {
+	uint8_t ptrLow = _memory.Read(_regPC++);
+	uint8_t ptrHigh = _memory.Read(_regPC++);
+
+	uint8_t addrLow = _memory.Read(ptrLow);
+	uint8_t addrHigh = _memory.Read(ptrHigh);
+
+	_currentAddr = (addrHigh << 8) | addrLow;
 }
 
 void CPU::IndexedIndirectX()
 {
+	uint8_t ptrLow = _memory.Read(_regPC++);
+
+	uint8_t addrLow = _memory.Read(ptrLow + _regX & 0x00ff);
+	uint8_t addrHigh = _memory.Read(ptrLow + _regX + 1 & 0x00ff);
+
+	_currentAddr = (addrHigh << 8) | addrLow;
 }
 
 void CPU::IndirectIndexedY()
 {
+	uint16_t ptrLow = _memory.Read(_regPC++);
+
+	uint8_t addrLow = _memory.Read(ptrLow & 0x00ff);
+	uint8_t addrHigh = _memory.Read((ptrLow + 1) & 0x00ff);
+
+	_currentAddr = ((addrHigh << 8) | addrLow) + _regY;
 }
