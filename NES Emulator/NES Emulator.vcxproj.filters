@@ -24,6 +24,12 @@
     <ClCompile Include="Disassembler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RamOnlyMemMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h">
@@ -38,5 +44,10 @@
     <ClInclude Include="Disassembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.out">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
