@@ -140,10 +140,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />
+    <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h" />
+    <ClInclude Include="Disassembler.h" />
     <ClInclude Include="MemoryMap.h" />
     <ClInclude Include="RAMOnlyMemMap.h" />
   </ItemGroup>

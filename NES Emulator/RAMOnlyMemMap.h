@@ -14,13 +14,13 @@ public:
 	}
 
 
-	uint8_t Read(uint16_t addr) override
+	uint8_t Read(uint16_t addr) const override
 	{
-		assert(addr > 0 && addr < 65536);
+		assert(addr >= 0 && addr < 65536);
 		return _ram[addr];
 	}
 
-	void Write(uint32_t addr, uint8_t data) override
+	void Write(uint16_t addr, uint8_t data) override
 	{
 		assert(addr >= 0 && addr < 65536);
 		_ram[addr] = data;

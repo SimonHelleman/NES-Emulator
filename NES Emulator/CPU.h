@@ -3,11 +3,13 @@
 #include <memory>
 #include <functional>
 #include "MemoryMap.h"
+#include "Disassembler.h"
+
 
 class CPU
 {
 public:
-	CPU(MemoryMap& memory);
+	CPU(MemoryMap& memory, Disassembler* disassembler);
 
 	void Clock();
 	void FetchInstruction();
@@ -31,6 +33,7 @@ public:
 		std::function<void(CPU*)> addrMode;
 		std::function<void(CPU*)> operation;
 		int clockCycles;
+		int size;
 	};
 
 private:
@@ -144,6 +147,8 @@ private:
 
 
 private:
+	MemoryMap& _memory;
+	Disassembler* _disassembler;
 
 	// CPU registers
 	uint8_t _regX = 0;
@@ -153,12 +158,10 @@ private:
 	uint8_t _regStatus = 0;
 	uint16_t _regPC = 0;
 
-	MemoryMap& _memory;
 	bool _doIRQ = false;
 	bool _doNMI = false;
-	bool _isAccumOpcode = false;
-
 	bool _isIRQPending = false;
+	bool _isAccumOpcode = false;
 
 	uint16_t _currentAddr = 0;
 	int8_t _branchOffset = 0;

@@ -8,6 +8,11 @@ int main()
 
 	RAMOnlyMemMap memory;
 
+	for (int i = 0; i < 65536; ++i)
+	{
+		memory.Write(i, 0xea); // Fill with noop instructions
+	}
+
 	memory.Write(0xfffc, 0x01);
 	memory.Write(0xfffd, 0x00);
 
@@ -23,8 +28,14 @@ int main()
 	memory.Write(9, 0xad);
 	memory.Write(10, 0xde);
 
-	CPU cpu = CPU(memory);
+	Disassembler disassembler = Disassembler(memory);
+	CPU cpu = CPU(memory, &disassembler);
 	cpu.Reset();
+
+	while (1)
+	{
+		cpu.Clock();
+	}
 
 	return 0;
 }
