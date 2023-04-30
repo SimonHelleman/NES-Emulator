@@ -1,7 +1,5 @@
 #pragma once
-#include <cassert>
 #include <memory>
-
 #include "MemoryMap.h"
 
 class RAMOnlyMemMap : public MemoryMap
@@ -13,18 +11,20 @@ public:
 	{
 	}
 
-
 	uint8_t Read(uint16_t addr) const override
 	{
-		assert(addr >= 0 && addr < 65536);
 		return _ram[addr];
 	}
 
 	void Write(uint16_t addr, uint8_t data) override
 	{
-		assert(addr >= 0 && addr < 65536);
 		_ram[addr] = data;
 	}
+
+	void LoadFromFile(const char* filePath);
+
+public:
+	static constexpr size_t RAM_SIZE = 65536;
 
 private:
 	std::unique_ptr<uint8_t[]> _ram;

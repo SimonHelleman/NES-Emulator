@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <vector>
+#include <unordered_map>
 
 #include "MemoryMap.h"
 
@@ -24,7 +24,7 @@ public:
 	void AddInstruction(uint16_t addr, const char* mnemonic, int size);
 
 private:
-	std::vector<Instruction> _disassembly;
+	std::unordered_map<uint16_t, Instruction> _disassembly;
 	const MemoryMap& _memory;
 };
 

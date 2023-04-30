@@ -142,12 +142,17 @@
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MemoryMap.cpp" />
+    <ClCompile Include="RamOnlyMemMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h" />
     <ClInclude Include="Disassembler.h" />
     <ClInclude Include="MemoryMap.h" />
     <ClInclude Include="RAMOnlyMemMap.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test.out" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
