@@ -141,12 +141,14 @@
   <ItemGroup>
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Disassembler.cpp" />
+    <ClCompile Include="InstructionSet.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MemoryMap.cpp" />
     <ClCompile Include="RamOnlyMemMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h" />
+    <ClInclude Include="CPUAdressingMode.h" />
     <ClInclude Include="Disassembler.h" />
     <ClInclude Include="MemoryMap.h" />
     <ClInclude Include="RAMOnlyMemMap.h" />

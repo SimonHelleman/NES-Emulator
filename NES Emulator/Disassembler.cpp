@@ -2,11 +2,14 @@
 #include <cstdio>
 #include "Disassembler.h"
 
-void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size)
+void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode)
 {
-	Instruction inst = { addr, mnemonic, size - 1, { 0, 0 } };
+	Instruction inst = { addr, mnemonic, addrMode, size - 1, { 0, 0 } };
 
 	printf("0x%04x    %s ", addr, mnemonic);
+
+	// This code is kinda grose, just a temporary dump until
+	// a GUI is up and running
 
 	if (size == 1)
 	{
@@ -16,7 +19,31 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size)
 	if (size == 2)
 	{
 		inst.operands[0] = _memory.Read(addr + 1);
-		printf("$%02x\n", inst.operands[0]);
+
+		if (addrMode == AdressingMode::Immediate)
+		{
+			printf("#$%02x\n", inst.operands[0]);
+		}
+		else if (addrMode == AdressingMode::ZeroPageIndexedX)
+		{
+			printf("$%02x, x\n", inst.operands[0]);
+		}
+		else if (addrMode == AdressingMode::ZeroPageIndexedY)
+		{
+			printf("$%02x, y\n", inst.operands[0]);
+		}
+		else if (addrMode == AdressingMode::IndexedIndirectX)
+		{
+			printf("($%02x, x)\n", inst.operands[0]);
+		}
+		else if (addrMode == AdressingMode::IndirectIndexedY)
+		{
+			printf("($%02x), y\n", inst.operands[0]);
+		}
+		else
+		{
+			printf("$%02x\n", inst.operands[0]);
+		}
 	}
 
 	if (size == 3)
@@ -26,7 +53,24 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size)
 
 		uint16_t absAddr = 0;
 		absAddr = (inst.operands[1] << 8) | inst.operands[0];
-		printf("$%04x\n", absAddr);
+		
+		
+		if (addrMode == AdressingMode::Absolute)
+		{
+			printf("$%04x\n", absAddr);
+		}
+		else if (addrMode == AdressingMode::AbsoluteIndexedX)
+		{
+			printf("$%04x, x\n", absAddr);
+		}
+		else if (addrMode == AdressingMode::AbsoluteIndexedY)
+		{
+			printf("$%04x, y\n", absAddr);
+		}
+		else if (addrMode == AdressingMode::Indirect)
+		{
+			printf("($%04x)\n", absAddr);
+		}
 	}
 
 	_disassembly[addr] = inst;

@@ -13,6 +13,8 @@ int main()
 
 	std::ofstream memDumpFile("hexdump.txt");
 	memDumpFile << memory.HexDump() << '\n';
+
+	memDumpFile.close();
 			
 	Disassembler disassembler = Disassembler(memory);
 	CPU cpu = CPU(memory, &disassembler);

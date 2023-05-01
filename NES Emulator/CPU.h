@@ -5,11 +5,13 @@
 #include "MemoryMap.h"
 #include "Disassembler.h"
 
-
 class CPU
 {
 public:
-	CPU(MemoryMap& memory, Disassembler* disassembler);
+	CPU(MemoryMap& memory, Disassembler* disassembler)
+		: _memory(memory), _opcodeMatrix(GetOpcodeMatrix(*this)), _disassembler(disassembler)
+	{
+	}
 
 	void Clock();
 	void FetchInstruction();
@@ -27,17 +29,21 @@ public:
 		_doNMI = b;
 	}
 
-	static struct Opcode
+
+	struct Opcode
 	{
 		const char* mnemonic;
-		std::function<void(CPU*)> addrMode;
+		AdressingMode addrMode;
+		std::function<void(CPU*)> addrModeOp;
 		std::function<void(CPU*)> operation;
 		int clockCycles;
 		int size;
 	};
 
+	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
+
 private:
-	static enum class State
+	enum class State
 	{
 		Fetch,
 		AddressingMode,
