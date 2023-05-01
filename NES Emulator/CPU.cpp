@@ -6,10 +6,10 @@ void CPU::Clock()
 	{
 		if (_doNMI)
 		{
-			_isIRQPending = _doIRQ && STATUS_I;
+			_isIRQPending = _doIRQ && !STATUS_I;
 			HandleNMI();
 		}
-		else if ((_doIRQ && STATUS_I) || _isIRQPending)
+		else if ((_doIRQ && !STATUS_I) || _isIRQPending)
 		{
 			BRK();
 			_isIRQPending = false;
@@ -62,7 +62,7 @@ void CPU::FetchInstruction()
 void CPU::Reset()
 {
 	_regStatus = 0;
-	_regStatus = STATUS_5 | STATUS_B | STATUS_I;
+	_regStatus = STATUS_5;
 	_regA = 0;
 	_regX = 0;
 	_regY = 0;
@@ -97,7 +97,6 @@ void CPU::JSR()
 	// Push return address to stack
 	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
 	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
-	_memory.Write(0x0100 | _regSP--, _regStatus);
 
 	_regPC = _currentAddr;
 }
@@ -354,7 +353,7 @@ void CPU::ADC()
 {
 	int8_t oldA = static_cast<int8_t>(_regA);
 	int8_t addend = static_cast<int8_t>(_memory.Read(_currentAddr));
-	_regA += static_cast<uint8_t>(addend) + (_regStatus & STATUS_C) ? 1 : 0;
+	_regA += static_cast<uint8_t>(addend) + ((_regStatus & STATUS_C) ? 1 : 0);
 
 	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;

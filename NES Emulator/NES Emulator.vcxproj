@@ -154,7 +154,8 @@
     <ClInclude Include="RAMOnlyMemMap.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="test.out" />
+    <None Include="eater_subroutine_test.bin" />
+    <None Include="test.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

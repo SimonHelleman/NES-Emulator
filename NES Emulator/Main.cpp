@@ -9,7 +9,7 @@ int main()
 
 	RAMOnlyMemMap memory;
 
-	memory.LoadFromFile("test.out");
+	memory.LoadFromFile("eater_subroutine_test.bin");
 
 	std::ofstream memDumpFile("hexdump.txt");
 	memDumpFile << memory.HexDump() << '\n';
@@ -23,6 +23,10 @@ int main()
 	while (1)
 	{
 		cpu.Clock();
+
+		// memDumpFile.open("hexdump.txt");
+		// memDumpFile << memory.HexDump();
+		// memDumpFile.close();
 	}
 
 	return 0;

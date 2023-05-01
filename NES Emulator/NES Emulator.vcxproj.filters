@@ -52,7 +52,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="test.out">
+    <None Include="test.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="eater_subroutine_test.bin">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
