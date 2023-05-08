@@ -22,7 +22,7 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 
 		if (addrMode == AdressingMode::Immediate)
 		{
-			printf("#$%02x\n", inst.operands[0]);
+			printf("#%d\n", inst.operands[0]);
 		}
 		else if (addrMode == AdressingMode::ZeroPageIndexedX)
 		{

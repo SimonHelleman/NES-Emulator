@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\dependencies">
+      <UniqueIdentifier>{761e072d-68c3-4725-9004-d7e87fcc19fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dependencies\imgui">
+      <UniqueIdentifier>{cb09d9c4-d138-49c8-9b6d-2341a572208b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -32,6 +38,30 @@
     </ClCompile>
     <ClCompile Include="InstructionSet.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_demo.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_draw.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_impl_glfw.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_tables.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\dependencies\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Dependencies\GLAD\glad.c">
+      <Filter>Source Files\dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +86,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="eater_subroutine_test.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="adc_stress_test.bin">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

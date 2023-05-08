@@ -393,7 +393,7 @@ void CPU::SBC()
 {
 	int8_t oldA = static_cast<int8_t>(_regA);
 	int8_t subtrahend = static_cast<int8_t>(_memory.Read(_currentAddr));
-	_regA -= static_cast<uint8_t>(subtrahend) + (_regStatus & STATUS_C) ? 0 : 1;
+	_regA -= static_cast<uint8_t>(subtrahend) + ((_regStatus & STATUS_C) ? 0 : 1);
 
 	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus & ~STATUS_C : _regStatus | STATUS_C;
 	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;

@@ -40,6 +40,11 @@ public:
 		int size;
 	};
 
+	const Opcode& GetCurrentInstruction()
+	{
+		return _currentInstruction;
+	}
+
 	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
 
 private:
