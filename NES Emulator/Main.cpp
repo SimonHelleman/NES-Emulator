@@ -10,6 +10,7 @@
 
 static int s_windowWidth = 1280;
 static int s_windowHeight = 720;
+static GLFWwindow* s_window;
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -18,9 +19,8 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-int main()
-{	
-	std::cout << "hello world\n";
+int InitUI()
+{
 
 	if (!glfwInit())
 	{
@@ -32,16 +32,16 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(s_windowWidth, s_windowHeight, "NES Emulator", nullptr, nullptr);
+	s_window = glfwCreateWindow(s_windowWidth, s_windowHeight, "NES Emulator", nullptr, nullptr);
 
-	if (!window)
+	if (!s_window)
 	{
 		std::cerr << "Failed to create GLFW window\n";
 		glfwTerminate();
 		return -1;
 	}
 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(s_window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -50,7 +50,7 @@ int main()
 	}
 
 	glViewport(0, 0, s_windowWidth, s_windowHeight);
-	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+	glfwSetFramebufferSizeCallback(s_window, FramebufferSizeCallback);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -59,6 +59,8 @@ int main()
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	//io.IniFilename = NULL;
 
 	
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -70,12 +72,31 @@ int main()
 	
 
 	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplGlfw_InitForOpenGL(s_window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	bool showDemoWindow = true;
+	return 0;
+}
 
-	while (!glfwWindowShouldClose(window))
+int main()
+{	
+	std::cout << "hello world\n";
+
+	int error = InitUI();
+
+	if (error)
+	{
+		return error;
+	}
+
+	bool showDemoWindow = false;
+
+	RAMOnlyMemMap memory;
+
+	memory.LoadFromFile("adc_stress_test.bin");
+
+	int maxDump = 1;
+	while (!glfwWindowShouldClose(s_window))
 	{
 		glfwPollEvents();
 
@@ -86,18 +107,40 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("NES Emulator");
-		ImGui::Text("Hello world from ImGui :)");
-		ImGui::End();
 
 		if (showDemoWindow)
 		{
 			ImGui::ShowDemoWindow(&showDemoWindow);
 		}
 
+		// This is a definite "refactor later" block of code
+		// Not too sure how to abstract away the UI until I have more
+		// of the system going
+		ImGui::Begin("Hexdump");
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
+		ImGui::SliderInt("Dump End", &maxDump, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
+		if (ImGui::BeginTable("hexdump", 17))
+		{
+			for (size_t i = 0; i < maxDump; ++i)
+			{
+				if (i % 16 == 0)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+					ImGui::Text("%04x:", i);
+				}
+				ImGui::TableNextColumn();
+				ImGui::Text("%02x", memory.Read(i));
+			}
+			ImGui::EndTable();
+		}
+		ImGui::PopStyleVar();
+		ImGui::End();
+
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		
+		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* currentContextBackup = glfwGetCurrentContext();
@@ -105,7 +148,7 @@ int main()
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(currentContextBackup);
 		}
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(s_window);
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();
@@ -113,10 +156,7 @@ int main()
 	ImGui::DestroyContext();
 
 /*
-	RAMOnlyMemMap memory;
-
-	memory.LoadFromFile("adc_stress_test.bin");
-
+	
 	std::ofstream memDumpFile("hexdump.txt");
 	memDumpFile << memory.HexDump() << '\n';
 
