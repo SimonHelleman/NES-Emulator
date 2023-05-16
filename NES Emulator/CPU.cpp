@@ -57,6 +57,10 @@ void CPU::FetchInstruction()
 	{
 		_disassembler->AddInstruction(_regPC++, _currentInstruction.mnemonic, _currentInstruction.size, _currentInstruction.addrMode);
 	}
+	else
+	{
+		++_regPC;
+	}
 }
 
 void CPU::Reset()
@@ -68,8 +72,9 @@ void CPU::Reset()
 	_regY = 0;
 	_regSP = 0xfd;
 	_regPC = RESET_VECTOR;
-	_currentInstruction = _opcodeMatrix[0x4c];
-	_currentState = State::AddressingMode;
+	Absolute();
+	_regPC = _currentAddr;
+	_currentState = State::Fetch;
 }
 
 void CPU::HandleNMI()

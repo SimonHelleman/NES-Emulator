@@ -29,7 +29,6 @@ public:
 		_doNMI = b;
 	}
 
-
 	struct Opcode
 	{
 		const char* mnemonic;
@@ -40,20 +39,31 @@ public:
 		int size;
 	};
 
-	const Opcode& GetCurrentInstruction()
-	{
-		return _currentInstruction;
-	}
-
-	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
-
-private:
 	enum class State
 	{
 		Fetch,
 		AddressingMode,
 		Execute
 	};
+
+	const Opcode& GetCurrentInstruction() const
+	{
+		return _currentInstruction;
+	}
+
+	State GetCurrentState() const
+	{
+		return _currentState;
+	}
+
+	uint16_t GetProgramCounter() const
+	{
+		return _regPC;
+	}
+
+	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
+
+private:
 
 // CPU instructions
 private:

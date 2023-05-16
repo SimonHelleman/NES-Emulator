@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 #include <unordered_map>
 
 #include "MemoryMap.h"
@@ -25,10 +26,13 @@ public:
 
 	void AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode);
 
+
 	const std::unordered_map<uint16_t, Instruction>& GetDisassembly() const
 	{
 		return _disassembly;
 	}
+
+	static std::string GetAssemblyLine(const Instruction& inst);
 
 private:
 	std::unordered_map<uint16_t, Instruction> _disassembly;

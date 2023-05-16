@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <array>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -97,6 +98,12 @@ int main()
 	CPU cpu = CPU(memory, &disassembler);
 	cpu.Reset();
 
+	int numInstructionsInTable = 0;
+	bool instructionAdded = false;
+	std::array<Disassembler::Instruction, 10> instTable;
+
+	const auto& disassembly = disassembler.GetDisassembly();
+
 	int maxDump = 1;
 	while (!glfwWindowShouldClose(s_window))
 	{
@@ -139,14 +146,50 @@ int main()
 		ImGui::PopStyleVar();
 		ImGui::End();
 
-		ImGui::Begin("PPU Frambuffer");
+		ImGui::Begin("PPU Framebuffer");
 		//ImGui::Image()
 		ImGui::End();
 
-		ImGui::Begin("Disassembly");
+		if (cpu.GetCurrentState() == CPU::State::AddressingMode && !instructionAdded)
+		{
+			if (numInstructionsInTable < instTable.size())
+			{
+				instTable[numInstructionsInTable++] = disassembly.at(cpu.GetProgramCounter() - 1);
+			}
+			else
+			{
+				for (size_t i = 0; i < instTable.size() - 1; ++i)
+				{
+					instTable[i] = instTable[i + 1];
+				}
+				instTable[instTable.size() - 1] = disassembly.at(cpu.GetProgramCounter() - 1);
+			}
+			instructionAdded = true;
+		}
 
+		if (cpu.GetCurrentState() != CPU::State::AddressingMode) instructionAdded = false;
+
+		ImGui::Begin("Disassembly");
+		if (ImGui::BeginTable("disassembly", 2))
+		{
+			for (int i = 0; i < numInstructionsInTable; ++i)
+			{
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("%04x", instTable[i].address);
+				ImGui::TableNextColumn();
+				ImGui::Text(Disassembler::GetAssemblyLine(instTable[i]).c_str());
+			}
+			ImGui::EndTable();
+		}
 		ImGui::End();
 
+		ImGui::Begin("Control");
+		if (ImGui::Button("Clock Step"))
+		{
+			cpu.Clock();
+		}
+		ImGui::End();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
