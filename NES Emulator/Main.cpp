@@ -82,18 +82,20 @@ int main()
 {	
 	std::cout << "hello world\n";
 
-	int error = InitUI();
-
-	if (error)
+	int error;
+	if (error = InitUI())
 	{
 		return error;
 	}
 
-	bool showDemoWindow = false;
+	bool showDemoWindow = true;
 
 	RAMOnlyMemMap memory;
-
 	memory.LoadFromFile("adc_stress_test.bin");
+
+	Disassembler disassembler = Disassembler(memory);
+	CPU cpu = CPU(memory, &disassembler);
+	cpu.Reset();
 
 	int maxDump = 1;
 	while (!glfwWindowShouldClose(s_window))
@@ -121,7 +123,7 @@ int main()
 		ImGui::SliderInt("Dump End", &maxDump, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
 		if (ImGui::BeginTable("hexdump", 17))
 		{
-			for (size_t i = 0; i < maxDump; ++i)
+			for (uint16_t i = 0; i < maxDump; ++i)
 			{
 				if (i % 16 == 0)
 				{
@@ -136,6 +138,15 @@ int main()
 		}
 		ImGui::PopStyleVar();
 		ImGui::End();
+
+		ImGui::Begin("PPU Frambuffer");
+		//ImGui::Image()
+		ImGui::End();
+
+		ImGui::Begin("Disassembly");
+
+		ImGui::End();
+
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

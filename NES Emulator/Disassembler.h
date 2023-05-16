@@ -25,6 +25,11 @@ public:
 
 	void AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode);
 
+	const std::unordered_map<uint16_t, Instruction>& GetDisassembly() const
+	{
+		return _disassembly;
+	}
+
 private:
 	std::unordered_map<uint16_t, Instruction> _disassembly;
 	const MemoryMap& _memory;

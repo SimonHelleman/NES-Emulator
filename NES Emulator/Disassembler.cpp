@@ -6,6 +6,7 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 {
 	Instruction inst = { addr, mnemonic, addrMode, size - 1, { 0, 0 } };
 
+	/*
 	printf("0x%04x    %s ", addr, mnemonic);
 
 	// This code is kinda grose, just a temporary dump until
@@ -72,6 +73,8 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 			printf("($%04x)\n", absAddr);
 		}
 	}
+
+	*/
 
 	_disassembly[addr] = inst;
 }

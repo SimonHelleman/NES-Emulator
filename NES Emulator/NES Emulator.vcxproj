@@ -155,6 +155,7 @@
     <ClCompile Include="..\Dependencies\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\Dependencies\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Disassembler.cpp" />
     <ClCompile Include="InstructionSet.cpp" />
@@ -163,9 +164,11 @@
     <ClCompile Include="RamOnlyMemMap.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cartridge.h" />
     <ClInclude Include="CPU.h" />
     <ClInclude Include="CPUAdressingMode.h" />
     <ClInclude Include="Disassembler.h" />
+    <ClInclude Include="Mapper0.h" />
     <ClInclude Include="MemoryMap.h" />
     <ClInclude Include="RAMOnlyMemMap.h" />
   </ItemGroup>
