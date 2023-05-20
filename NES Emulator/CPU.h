@@ -61,6 +61,36 @@ public:
 		return _regPC;
 	}
 
+	uint8_t GetA() const
+	{
+		return _regA;
+	}
+
+	uint8_t GetX() const
+	{
+		return _regX;
+	}
+
+	uint8_t GetY() const
+	{
+		return _regY;
+	}
+
+	uint8_t GetSP() const
+	{
+		return _regSP;
+	}
+
+	uint8_t GetStatusReg() const
+	{
+		return _regStatus;
+	}
+
+	bool IsInstFinished() const
+	{
+		return _isInstFinished;
+	}
+
 	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
 
 private:
@@ -166,6 +196,15 @@ private:
 	void IndirectIndexedY();
 	void Implied() { }
 
+public:
+	static constexpr uint8_t STATUS_N = 0b10000000;
+	static constexpr uint8_t STATUS_V = 0b01000000;
+	static constexpr uint8_t STATUS_5 = 0b00100000;
+	static constexpr uint8_t STATUS_B = 0b00010000;
+	static constexpr uint8_t STATUS_D = 0b00001000; // NES didn't have decimal mode -> not implementing
+	static constexpr uint8_t STATUS_I = 0b00000100;
+	static constexpr uint8_t STATUS_Z = 0b00000010;
+	static constexpr uint8_t STATUS_C = 0b00000001;
 
 private:
 	MemoryMap& _memory;
@@ -183,21 +222,13 @@ private:
 	bool _doNMI = false;
 	bool _isIRQPending = false;
 	bool _isAccumOpcode = false;
+	bool _isInstFinished = false;
 
 	uint16_t _currentAddr = 0;
 	int8_t _branchOffset = 0;
 	Opcode _currentInstruction = { 0 };
 	State _currentState = State::Fetch;
 	std::unique_ptr<Opcode[]> _opcodeMatrix;
-
-	static constexpr uint8_t STATUS_N = 0b10000000;
-	static constexpr uint8_t STATUS_V = 0b01000000;
-	static constexpr uint8_t STATUS_5 = 0b00100000;
-	static constexpr uint8_t STATUS_B = 0b00010000;
-	static constexpr uint8_t STATUS_D = 0b00001000; // NES didn't have decimal mode -> not implementing
-	static constexpr uint8_t STATUS_I = 0b00000100;
-	static constexpr uint8_t STATUS_Z = 0b00000010;
-	static constexpr uint8_t STATUS_C = 0b00000001;
 
 	static constexpr uint16_t NMI_VECTOR = 0xfffa;
 	static constexpr uint16_t RESET_VECTOR = 0xfffc;

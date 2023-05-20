@@ -102,9 +102,9 @@ int main()
 	bool instructionAdded = false;
 	std::array<Disassembler::Instruction, 10> instTable;
 
-	const auto& disassembly = disassembler.GetDisassembly();
-
 	int maxDump = 1;
+	bool continuousRun = true;
+	bool clockUntilFinished = false;
 	while (!glfwWindowShouldClose(s_window))
 	{
 		glfwPollEvents();
@@ -126,35 +126,38 @@ int main()
 		// Not too sure how to abstract away the UI until I have more
 		// of the system going
 		ImGui::Begin("Hexdump");
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-		ImGui::SliderInt("Dump End", &maxDump, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
-		if (ImGui::BeginTable("hexdump", 17))
 		{
-			for (uint16_t i = 0; i < maxDump; ++i)
+			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
+			ImGui::SliderInt("Dump End", &maxDump, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
+			if (ImGui::BeginTable("hexdump", 17))
 			{
-				if (i % 16 == 0)
+				for (uint16_t i = 0; i < maxDump; ++i)
 				{
-					ImGui::TableNextRow();
+					if (i % 16 == 0)
+					{
+						ImGui::TableNextRow();
+						ImGui::TableNextColumn();
+						ImGui::Text("%04x:", i);
+					}
 					ImGui::TableNextColumn();
-					ImGui::Text("%04x:", i);
+					ImGui::Text("%02x", memory.Read(i));
 				}
-				ImGui::TableNextColumn();
-				ImGui::Text("%02x", memory.Read(i));
+				ImGui::EndTable();
 			}
-			ImGui::EndTable();
+			ImGui::PopStyleVar();
 		}
-		ImGui::PopStyleVar();
 		ImGui::End();
 
 		ImGui::Begin("PPU Framebuffer");
 		//ImGui::Image()
 		ImGui::End();
 
-		if (cpu.GetCurrentState() == CPU::State::AddressingMode && !instructionAdded)
+		//if (cpu.GetCurrentState() == CPU::State::AddressingMode && !instructionAdded)
+		if (cpu.IsInstFinished() && !instructionAdded)
 		{
 			if (numInstructionsInTable < instTable.size())
 			{
-				instTable[numInstructionsInTable++] = disassembly.at(cpu.GetProgramCounter() - 1);
+				instTable[numInstructionsInTable++] = disassembler.GetLatestInstruction();
 			}
 			else
 			{
@@ -162,32 +165,81 @@ int main()
 				{
 					instTable[i] = instTable[i + 1];
 				}
-				instTable[instTable.size() - 1] = disassembly.at(cpu.GetProgramCounter() - 1);
+				instTable[instTable.size() - 1] = disassembler.GetLatestInstruction();
 			}
 			instructionAdded = true;
 		}
 
-		if (cpu.GetCurrentState() != CPU::State::AddressingMode) instructionAdded = false;
+		if (!cpu.IsInstFinished()) instructionAdded = false;
 
 		ImGui::Begin("Disassembly");
-		if (ImGui::BeginTable("disassembly", 2))
 		{
-			for (int i = 0; i < numInstructionsInTable; ++i)
+			if (ImGui::BeginTable("disassembly", 2))
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("%04x", instTable[i].address);
-				ImGui::TableNextColumn();
-				ImGui::Text(Disassembler::GetAssemblyLine(instTable[i]).c_str());
+				for (int i = 0; i < numInstructionsInTable; ++i)
+				{
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+					ImGui::Text("%04x", instTable[i].address);
+					ImGui::TableNextColumn();
+					ImGui::Text(Disassembler::GetDisassemblyLine(instTable[i]).c_str());
+				}
+				ImGui::EndTable();
 			}
-			ImGui::EndTable();
 		}
 		ImGui::End();
 
 		ImGui::Begin("Control");
-		if (ImGui::Button("Clock Step"))
 		{
-			cpu.Clock();
+			
+			ImGui::Checkbox("Run", &continuousRun);
+
+			if (ImGui::Button("Clock Step") || continuousRun)
+			{
+				cpu.Clock();
+			}
+
+			if (ImGui::Button("Instruction Step") && !continuousRun)
+			{
+				clockUntilFinished = true;
+				cpu.Clock();
+			}
+
+			if (clockUntilFinished)
+			{
+				if (!cpu.IsInstFinished())
+				{
+					cpu.Clock();
+				}
+				else
+				{
+					clockUntilFinished = false;
+				}
+			}
+			ImGui::End();
+		}
+
+		ImGui::Begin("CPU Registers");
+		{
+			ImGui::Text("A:  %02x", cpu.GetA());
+			ImGui::Text("X:  %02x", cpu.GetX());
+			ImGui::Text("Y:  %02x", cpu.GetY());
+			ImGui::Text("SP: %02x", cpu.GetSP());
+			ImGui::Text("PC: %04x", cpu.GetProgramCounter());
+
+			char flags[9];
+			uint8_t status = cpu.GetStatusReg();
+			flags[0] = status & CPU::STATUS_N ? 'N' : '-';
+			flags[1] = status & CPU::STATUS_V ? 'V' : '-';
+			flags[2] = status & CPU::STATUS_5 ? '5' : '-';
+			flags[3] = status & CPU::STATUS_B ? 'B' : '-';
+			flags[4] = status & CPU::STATUS_D ? 'D' : '-';
+			flags[5] = status & CPU::STATUS_I ? 'I' : '-';
+			flags[6] = status & CPU::STATUS_Z ? 'Z' : '-';
+			flags[7] = status & CPU::STATUS_C ? 'C' : '-';
+			flags[8] = '\0';
+
+			ImGui::Text("Status: %02x [%s]", status, flags);
 		}
 		ImGui::End();
 
@@ -208,26 +260,5 @@ int main()
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
-
-/*
-	
-	std::ofstream memDumpFile("hexdump.txt");
-	memDumpFile << memory.HexDump() << '\n';
-
-	memDumpFile.close();
-			
-	Disassembler disassembler = Disassembler(memory);
-	CPU cpu = CPU(memory, &disassembler);
-	cpu.Reset();
-
-	while (cpu.GetCurrentInstruction().mnemonic != "NOP")
-	{
-		cpu.Clock();
-	}
-
-	memDumpFile.open("hexdump.txt");
-	memDumpFile << memory.HexDump();
-	memDumpFile.close();
-*/
 	return 0;
 }

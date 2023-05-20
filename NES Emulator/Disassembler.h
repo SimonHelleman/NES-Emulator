@@ -32,10 +32,26 @@ public:
 		return _disassembly;
 	}
 
-	static std::string GetAssemblyLine(const Instruction& inst);
+	const Instruction& GetInstruction(uint16_t addr) const
+	{
+		return _disassembly.at(addr);
+	}
+
+	const Instruction& GetLatestInstruction() const
+	{
+		return _latestInst;
+	}
+
+	std::string GetLatestDissamblyLine() const
+	{
+		return GetDisassemblyLine(_latestInst);
+	}
+
+	static std::string GetDisassemblyLine(const Instruction& inst);
 
 private:
 	std::unordered_map<uint16_t, Instruction> _disassembly;
+	Instruction _latestInst;
 	const MemoryMap& _memory;
 };
 

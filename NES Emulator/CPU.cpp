@@ -4,6 +4,7 @@ void CPU::Clock()
 {
 	if (_currentState == State::Fetch)
 	{
+		_isInstFinished = false;
 		if (_doNMI)
 		{
 			_isIRQPending = _doIRQ && !STATUS_I;
@@ -36,6 +37,7 @@ void CPU::Clock()
 
 		_currentInstruction.operation(this);
 		_currentState = State::Fetch;
+		_isInstFinished = true;
 	}
 }
 

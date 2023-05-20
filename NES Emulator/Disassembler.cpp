@@ -18,9 +18,10 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 	}
 
 	_disassembly[addr] = inst;
+	_latestInst = inst;
 }
 
-std::string Disassembler::GetAssemblyLine(const Instruction& inst)
+std::string Disassembler::GetDisassemblyLine(const Instruction& inst)
 {
 	constexpr size_t bufferSize = 64;
 	char buf[bufferSize];
