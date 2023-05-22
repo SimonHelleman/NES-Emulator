@@ -33,5 +33,4 @@ Cartridge::Cartridge(const char* filePath)
 	file.read(reinterpret_cast<char*>(_characterROM.get()), characterROMSize);
 
 	file.close();
-
 }

@@ -6,6 +6,8 @@
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Image.h"
+#include "Texture.h"
 #include "RAMOnlyMemMap.h"
 #include "CPU.h"
 
@@ -61,7 +63,7 @@ int InitUI()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	//io.IniFilename = NULL;
+	// io.IniFilename = NULL;
 
 	
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -89,7 +91,7 @@ int main()
 		return error;
 	}
 
-	bool showDemoWindow = true;
+	bool showDemoWindow = false;
 
 	RAMOnlyMemMap memory;
 	memory.LoadFromFile("adc_stress_test.bin");
@@ -103,8 +105,14 @@ int main()
 	std::array<Disassembler::Instruction, 10> instTable;
 
 	int maxDump = 1;
+
 	bool continuousRun = true;
 	bool clockUntilFinished = false;
+
+	Image image = Image(320, 240);
+	RGBA* pixels = image.Pixels();
+	image.Clear();
+	Texture tex = Texture(image, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 	while (!glfwWindowShouldClose(s_window))
 	{
 		glfwPollEvents();
@@ -149,10 +157,11 @@ int main()
 		ImGui::End();
 
 		ImGui::Begin("PPU Framebuffer");
-		//ImGui::Image()
+		{
+			ImGui::Image((void*)(intptr_t)tex.TextureId(), ImVec2((float)image.Width(), (float)image.Height()));
+		}
 		ImGui::End();
 
-		//if (cpu.GetCurrentState() == CPU::State::AddressingMode && !instructionAdded)
 		if (cpu.IsInstFinished() && !instructionAdded)
 		{
 			if (numInstructionsInTable < instTable.size())
