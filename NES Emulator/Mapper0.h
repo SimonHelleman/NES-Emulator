@@ -23,7 +23,8 @@ public:
 
 		if (addr >= 0x8000)
 		{
-			return _programROM[_is32K ? addr % 8000 : (addr % 8000) % PRG_ROM16K];
+			uint16_t index = _is32K ? addr % 0x8000 : (addr % 0x8000) % PRG_ROM16K;
+			return _programROM[index];
 		}
 		return 0;
 	}

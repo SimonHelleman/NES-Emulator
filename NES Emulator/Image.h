@@ -1,7 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <cstring>
-#include <cassert>
 
 struct RGBA
 {
@@ -17,12 +15,12 @@ struct RGBA
 		};
 	};
 
-	RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
+	constexpr RGBA(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 0xff)
 		: r(r), g(g), b(b), a(a)
 	{
 	}
 	
-	RGBA(uint32_t val = 0xff000000)
+	constexpr RGBA(uint32_t val = 0xff000000)
 		: val(val)
 	{
 	}
@@ -41,59 +39,17 @@ struct RGBA
 class Image
 {
 public:
-	Image(unsigned int width, unsigned int height)
-		: _width(width), _height(height), _data(new RGBA[(size_t)width * (size_t)height])
-	{
-	}
+	Image(unsigned int width, unsigned int height);
 
-	Image(const Image& other)
-	{
-		_width = other._width;
-		_height = other._height;
-		_data = new RGBA[(size_t)(other._width) * (size_t)other._height]; // Fight me
-		memcpy(_data, other._data, (size_t)(_width) * (size_t)(_height) * sizeof(RGBA));
-	}
+	Image(const Image& other);
 
-	Image(Image&& other) noexcept
-	{
-		_width = other._width;
-		_height = other._height;
-		_data = other._data;
+	Image(Image&& other) noexcept;
 
-		other._data = nullptr;
-	}
+	Image& operator=(const Image& other);
 
-	Image& operator=(const Image& other)
-	{
-		if (this == &other) return *this;
-		delete[] _data;
+	Image& operator=(Image&& other) noexcept;
 
-		_width = other._width;
-		_height = other._height;
-		_data = new RGBA[(size_t)(other._width) * (size_t)(other._height)];
-		memcpy(_data, other._data, (size_t)(_width) * (size_t)(_height) * sizeof(RGBA));
-		return *this;
-	}
-
-	Image& operator=(Image&& other) noexcept
-	{
-		if (this == &other) return *this;
-
-		delete[] _data;
-
-		_width = other._width;
-		_height = other._height;
-		_data = other._data;
-
-		other._data = nullptr;
-
-		return *this;
-	}
-
-	~Image()
-	{
-		delete[] _data;
-	}
+	~Image();
 
 	unsigned int Width() const
 	{
@@ -105,25 +61,13 @@ public:
 		return _height;
 	}
 
-	RGBA GetPixel(unsigned int x, unsigned int y) const
-	{
-		assert(x < _width && y < _height);
-		return _data[y * _width + x];
-	}
+	RGBA GetPixel(unsigned int x, unsigned int y) const;
 
-	void SetPixel(unsigned int x, unsigned int y, RGBA color) const
-	{
-		assert(x < _width && y < _height);
-		_data[y * _width + x] = color;
-	}
+	void SetPixel(unsigned int x, unsigned int y, RGBA color) const;
 
-	void Clear() const
-	{
-		for (unsigned int i = 0; i < _width * _height; ++i)
-		{
-			_data[i] = { 0, 0, 0 };
-		}
-	}
+	void Clear(RGBA color = 0xff000000) const;
+
+	void Copy(const Image& image, unsigned int x, unsigned int y);
 
 	const void* Data() const
 	{

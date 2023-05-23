@@ -6,6 +6,15 @@ class Cartridge
 public:
 	Cartridge(const char* filePath);
 	
+	const std::unique_ptr<uint8_t[]>& ProgramROM() const
+	{
+		return _programROM;
+	}
+
+	const std::unique_ptr<uint8_t[]>& CharacterROM() const
+	{
+		return _characterROM;
+	}
 private:
 	struct Header
 	{

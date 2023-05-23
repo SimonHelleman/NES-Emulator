@@ -69,6 +69,12 @@
     <ClCompile Include="PPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPU.h">
@@ -110,6 +116,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="adc_stress_test.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="nestest.nes">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

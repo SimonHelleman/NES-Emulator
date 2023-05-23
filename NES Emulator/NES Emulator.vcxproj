@@ -158,11 +158,13 @@
     <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="CPU.cpp" />
     <ClCompile Include="Disassembler.cpp" />
+    <ClCompile Include="Image.cpp" />
     <ClCompile Include="InstructionSet.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MemoryMap.cpp" />
     <ClCompile Include="PPU.cpp" />
     <ClCompile Include="RamOnlyMemMap.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cartridge.h" />
@@ -179,6 +181,7 @@
   <ItemGroup>
     <None Include="adc_stress_test.bin" />
     <None Include="eater_subroutine_test.bin" />
+    <None Include="nestest.nes" />
     <None Include="test.bin" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

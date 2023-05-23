@@ -8,8 +8,11 @@
 #include <GLFW/glfw3.h>
 #include "Image.h"
 #include "Texture.h"
+#include "Cartridge.h"
+#include "Mapper0.h"
 #include "RAMOnlyMemMap.h"
 #include "CPU.h"
+#include "PPU.h"
 
 static int s_windowWidth = 1280;
 static int s_windowHeight = 720;
@@ -82,7 +85,7 @@ int InitUI()
 }
 
 int main()
-{	
+{
 	std::cout << "hello world\n";
 
 	int error;
@@ -93,25 +96,41 @@ int main()
 
 	bool showDemoWindow = false;
 
-	RAMOnlyMemMap memory;
-	memory.LoadFromFile("adc_stress_test.bin");
 
-	Disassembler disassembler = Disassembler(memory);
-	CPU cpu = CPU(memory, &disassembler);
+	Cartridge cart = Cartridge("nestest.nes");
+
+	MemoryMap* memory = new Mapper0(false, cart.ProgramROM());
+
+	PPU ppu = PPU(*memory, cart.CharacterROM());
+
+	Disassembler disassembler = Disassembler(*memory);
+	CPU cpu = CPU(*memory, &disassembler);
 	cpu.Reset();
 
 	int numInstructionsInTable = 0;
 	bool instructionAdded = false;
 	std::array<Disassembler::Instruction, 10> instTable;
 
-	int maxDump = 1;
+	int dumpEnd = 1;
 
-	bool continuousRun = true;
+	bool continuousRun = false;
 	bool clockUntilFinished = false;
 
-	Image image = Image(320, 240);
-	RGBA* pixels = image.Pixels();
+	Image image = Image(16 * 8, 16 * 8);
 	image.Clear();
+	PPU::Pallet pallet = {
+		{ 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }
+	};
+	int cnt = 0;
+	for (int y = 0; y < 16; ++y)
+	{
+		for (int x = 0; x < 16; ++x)
+		{
+			image.Copy(ppu.GetBackgroundTile(cnt++, pallet), x * 8, y * 8);
+		}
+	}
+	//image.Clear(0xffffffff);
+	int scale = 2;
 	Texture tex = Texture(image, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 	while (!glfwWindowShouldClose(s_window))
 	{
@@ -136,10 +155,10 @@ int main()
 		ImGui::Begin("Hexdump");
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-			ImGui::SliderInt("Dump End", &maxDump, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
+			ImGui::SliderInt("Dump End", &dumpEnd, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
 			if (ImGui::BeginTable("hexdump", 17))
 			{
-				for (uint16_t i = 0; i < maxDump; ++i)
+				for (uint16_t i = 0; i < dumpEnd; ++i)
 				{
 					if (i % 16 == 0)
 					{
@@ -148,7 +167,7 @@ int main()
 						ImGui::Text("%04x:", i);
 					}
 					ImGui::TableNextColumn();
-					ImGui::Text("%02x", memory.Read(i));
+					ImGui::Text("%02x", memory->Read(i));
 				}
 				ImGui::EndTable();
 			}
@@ -158,7 +177,7 @@ int main()
 
 		ImGui::Begin("PPU Framebuffer");
 		{
-			ImGui::Image((void*)(intptr_t)tex.TextureId(), ImVec2((float)image.Width(), (float)image.Height()));
+			ImGui::Image((void*)(intptr_t)tex.TextureId(), ImVec2((float)image.Width() * scale, (float)image.Height() * scale));
 		}
 		ImGui::End();
 
