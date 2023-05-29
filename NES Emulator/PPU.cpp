@@ -1,11 +1,6 @@
 #include "PPU.h"
 
-uint8_t PPU::Read(uint16_t addr)
-{
-    return uint8_t();
-}
-
-void PPU::Write(uint16_t addr, uint8_t data)
+void PPU::Clock()
 {
 }
 
@@ -21,7 +16,7 @@ Image PPU::GetBackgroundTile(uint8_t index, const Pallet& pallet)
     {
         for (int j = 0; j < 8; ++j)
         {
-            tileData[i][j] = _chrROM[startAddr + offset++];
+            tileData[i][j] = _memory.Read(startAddr + offset++);
         }
     }
 

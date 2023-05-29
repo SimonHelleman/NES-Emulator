@@ -99,12 +99,14 @@ int main()
 
 	Cartridge cart = Cartridge("nestest.nes");
 
-	MemoryMap* memory = new Mapper0(false, cart.ProgramROM());
+	PPUMapper0 ppuMemory = PPUMapper0(cart.CharacterROM());
 
-	PPU ppu = PPU(*memory, cart.CharacterROM());
+	PPU ppu = PPU(ppuMemory);
+	
+	CPUMapper0 memory = CPUMapper0(&ppu, false, cart.ProgramROM());
 
-	Disassembler disassembler = Disassembler(*memory);
-	CPU cpu = CPU(*memory, &disassembler);
+	Disassembler disassembler = Disassembler(memory);
+	CPU cpu = CPU(memory, &disassembler);
 	cpu.Reset();
 
 	int numInstructionsInTable = 0;
@@ -129,7 +131,7 @@ int main()
 			image.Copy(ppu.GetBackgroundTile(cnt++, pallet), x * 8, y * 8);
 		}
 	}
-	//image.Clear(0xffffffff);
+
 	int scale = 2;
 	Texture tex = Texture(image, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 	while (!glfwWindowShouldClose(s_window))
@@ -167,7 +169,7 @@ int main()
 						ImGui::Text("%04x:", i);
 					}
 					ImGui::TableNextColumn();
-					ImGui::Text("%02x", memory->Read(i));
+					ImGui::Text("%02x", memory.Read(i));
 				}
 				ImGui::EndTable();
 			}

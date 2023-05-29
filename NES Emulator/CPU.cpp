@@ -84,10 +84,19 @@ void CPU::HandleNMI()
 	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
 	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
 
+	_regStatus &= ~STATUS_B;
+	_regStatus |= STATUS_I;
 
-	_regPC = NMI_VECTOR;
+	_memory.Write(0x0100 | _regSP--, _regStatus);
+
+	uint8_t addrLow = _memory.Read(NMI_VECTOR);
+	uint8_t addrHigh = _memory.Read(NMI_VECTOR + 1);
+
+	_regPC = addrHigh << 8 | addrLow;
 
 	_doNMI = false;
+
+	_inturruptCycles = 8;
 }
 
 void CPU::BRK()
@@ -115,7 +124,6 @@ void CPU::RTI()
 	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
 
 	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
-
 }
 
 void CPU::RTS()

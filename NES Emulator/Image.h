@@ -25,12 +25,12 @@ struct RGBA
 	{
 	}
 	
-	bool operator==(const RGBA& other) const
+	constexpr bool operator==(const RGBA& other) const
 	{
 		return val == other.val;
 	}
 	
-	bool operator!=(const RGBA& other) const
+	constexpr bool operator!=(const RGBA& other) const
 	{
 		return val != other.val;
 	}
@@ -51,12 +51,12 @@ public:
 
 	~Image();
 
-	unsigned int Width() const
+	constexpr unsigned int Width() const
 	{
 		return _width;
 	}
 
-	unsigned int Height() const
+	constexpr unsigned int Height() const
 	{
 		return _height;
 	}

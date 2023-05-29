@@ -59,13 +59,13 @@ Image::~Image()
 
 RGBA Image::GetPixel(unsigned int x, unsigned int y) const
 {
-	assert(x < _width&& y < _height);
+	assert(x < _width && y < _height);
 	return _data[y * _width + x];
 }
 
 void Image::SetPixel(unsigned int x, unsigned int y, RGBA color) const
 {
-	assert(x < _width&& y < _height);
+	assert(x < _width && y < _height);
 	_data[y * _width + x] = color;
 }
 

@@ -1,42 +1,21 @@
 #pragma once
-#include <cstdint>
-#include <memory>
+#include "PPU.h"
 #include "MemoryMap.h"
 
-class Mapper0 : public MemoryMap
+class CPUMapper0 : public MemoryMap
 {
 public:
 
-	Mapper0(bool is32K, const std::unique_ptr<uint8_t[]>& programROM)
+	CPUMapper0(PPU* ppu, bool is32K, const std::unique_ptr<uint8_t[]>& programROM)
 		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _programROM(programROM),
-		_is32K(is32K)
+		_ppu(ppu), _is32K(is32K)
 	{
-		
 	}
 
-	uint8_t Read(uint16_t addr) const override
-	{
-		if (addr <= 0x1fff)
-		{
-			return _ram[addr % RAM_SIZE];
-		}
+	uint8_t Read(uint16_t addr) const override;
 
-		if (addr >= 0x8000)
-		{
-			uint16_t index = _is32K ? addr % 0x8000 : (addr % 0x8000) % PRG_ROM16K;
-			return _programROM[index];
-		}
-		return 0;
-	}
-
-	void Write(uint16_t addr, uint8_t data) override
-	{
-		if (addr <= 0x1fff)
-		{
-			_ram[addr] = data;
-		}
-	}
-
+	void Write(uint16_t addr, uint8_t data) override;
+	
 public:
 	static constexpr size_t RAM_SIZE = 2048;
 	static constexpr size_t PRG_ROM16K = 16384;
@@ -44,5 +23,20 @@ public:
 private:
 	std::unique_ptr<uint8_t[]> _ram;
 	const std::unique_ptr<uint8_t[]>& _programROM;
+	PPU* _ppu;
 	bool _is32K;
+};
+
+class PPUMapper0 : public PPUMemoryMap
+{
+public:
+	
+	PPUMapper0(const std::unique_ptr<uint8_t[]>& chrROM)
+		: PPUMemoryMap(chrROM)
+	{
+	}
+
+	uint8_t Read(uint16_t addr) const override;
+	void Write(uint16_t addr, uint8_t data) override;
+
 };

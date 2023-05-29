@@ -15,6 +15,12 @@ public:
 	{
 		return _characterROM;
 	}
+
+	int Mapper() const
+	{
+		return _mapper;
+	}
+
 private:
 	struct Header
 	{
