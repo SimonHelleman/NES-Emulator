@@ -32,12 +32,12 @@ public:
 	~Texture();
 
 
-	Filtering Filter() const
+	constexpr Filtering Filter() const
 	{
 		return _filter;
 	}
 
-	Wrapping Wrap() const
+	constexpr Wrapping Wrap() const
 	{
 		return _wrapping;
 	}
@@ -50,6 +50,8 @@ public:
 	void Bind();
 
 	void Unbind();
+
+	void Update(const Image& image);
 
 private:
 	GLuint _texture;

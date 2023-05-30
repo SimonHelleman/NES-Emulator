@@ -79,7 +79,7 @@ public:
 		_regAddr |= _addressLatch ? val : val16 << 8;
 	}
 
-	Image GetBackgroundTile(uint8_t index, const Pallet& pallet);
+	Image GetTile(uint8_t index, const Pallet& pallet);
 	Image GetPatternTable(int table, const Pallet& pallet);
 
 private:

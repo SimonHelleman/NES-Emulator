@@ -48,7 +48,6 @@ Image& Image::operator=(Image&& other) noexcept
 	_data = other._data;
 
 	other._data = nullptr;
-
 	return *this;
 }
 

@@ -118,22 +118,34 @@ int main()
 	bool continuousRun = false;
 	bool clockUntilFinished = false;
 
-	Image image = Image(16 * 8, 16 * 8);
-	image.Clear();
 	PPU::Pallet pallet = {
 		{ 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }
 	};
-	int cnt = 0;
-	for (int y = 0; y < 16; ++y)
+
+	//Image patternTable1 = Image(16 * 8, 16 * 8);
+	Image patternTable1 = ppu.GetPatternTable(0, pallet);
+	Image patternTable2 = ppu.GetPatternTable(1, pallet);
+	const Image& framebuffer = ppu.GetFramebuffer();
+
+	//patternTable1.Clear();
+
+	//int cnt = 0;
+	//for (int y = 0; y < 16; ++y)
 	{
-		for (int x = 0; x < 16; ++x)
+	//	for (int x = 0; x < 16; ++x)
 		{
-			image.Copy(ppu.GetBackgroundTile(cnt++, pallet), x * 8, y * 8);
+	//		patternTable1.Copy(ppu.GetTile(cnt++, pallet), x * 8, y * 8);
 		}
 	}
 
-	int scale = 2;
-	Texture tex = Texture(image, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+	Texture patternTable1Tex = Texture(patternTable1, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+	Texture patternTable2Tex = Texture(patternTable2, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+	Texture framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+
+	int framebufferScale = 1;
+	int patternTableScale = 2;
+
+
 	while (!glfwWindowShouldClose(s_window))
 	{
 		glfwPollEvents();
@@ -179,7 +191,16 @@ int main()
 
 		ImGui::Begin("PPU Framebuffer");
 		{
-			ImGui::Image((void*)(intptr_t)tex.TextureId(), ImVec2((float)image.Width() * scale, (float)image.Height() * scale));
+			ImGui::Image((void*)(intptr_t)framebufferTex.TextureId(), ImVec2((float)framebuffer.Width() * framebufferScale, (float)framebuffer.Height() * framebufferScale));
+		}
+		ImGui::End();
+
+		ImGui::Begin("Pattern Tables");
+		{
+			ImGui::Image((void*)(intptr_t)patternTable1Tex.TextureId(), ImVec2((float)patternTable1.Width() * patternTableScale, (float)patternTable1.Height() * patternTableScale));
+			ImGui::SameLine();
+			ImGui::Image((void*)(intptr_t)patternTable2Tex.TextureId(), ImVec2((float)patternTable2.Width() * patternTableScale, (float)patternTable2.Height() * patternTableScale));
+
 		}
 		ImGui::End();
 
