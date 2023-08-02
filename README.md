@@ -1,4 +1,4 @@
-Work in progress NES emulator.
+Work in progress NES emulator
 
 Progress so far:
 
@@ -6,3 +6,5 @@ Progress so far:
 2. Ability to interpret machine code
 3. Disassembler
 4. Basic GUI
+
+![screenshot](Screenshots/2023-08-01.png)
