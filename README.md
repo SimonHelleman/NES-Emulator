@@ -7,4 +7,4 @@ Progress so far:
 3. Disassembler
 4. Basic GUI
 
-![screenshot](Screenshots/Screenshot 2023-08-01 160127.png)
+![screenshot](Screenshots/2023-08-01.png)
