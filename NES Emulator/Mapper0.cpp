@@ -40,5 +40,9 @@ uint8_t PPUMapper0::Read(uint16_t addr) const
 
 void PPUMapper0::Write(uint16_t addr, uint8_t data)
 {
+	if (addr <= 0x1fff)
+	{
+		_chrROM[addr] = data;
+	}
 
 }

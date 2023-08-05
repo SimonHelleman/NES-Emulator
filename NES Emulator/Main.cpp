@@ -113,7 +113,7 @@ int main()
 	bool instructionAdded = false;
 	std::array<Disassembler::Instruction, 10> instTable;
 
-	int dumpEnd = 1;
+	int dumpPage = 1;
 
 	bool continuousRun = false;
 	bool clockUntilFinished = false;
@@ -122,21 +122,9 @@ int main()
 		{ 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }
 	};
 
-	//Image patternTable1 = Image(16 * 8, 16 * 8);
 	Image patternTable1 = ppu.GetPatternTable(0, pallet);
 	Image patternTable2 = ppu.GetPatternTable(1, pallet);
 	const Image& framebuffer = ppu.GetFramebuffer();
-
-	//patternTable1.Clear();
-
-	//int cnt = 0;
-	//for (int y = 0; y < 16; ++y)
-	{
-	//	for (int x = 0; x < 16; ++x)
-		{
-	//		patternTable1.Copy(ppu.GetTile(cnt++, pallet), x * 8, y * 8);
-		}
-	}
 
 	Texture patternTable1Tex = Texture(patternTable1, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 	Texture patternTable2Tex = Texture(patternTable2, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
@@ -169,10 +157,11 @@ int main()
 		ImGui::Begin("Hexdump");
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-			ImGui::SliderInt("Dump End", &dumpEnd, 1, MemoryMap::ADRESSABLE_RANGE, "%04x");
+			ImGui::SliderInt("Page", &dumpPage, 0, 15, "%02x");
 			if (ImGui::BeginTable("hexdump", 17))
 			{
-				for (uint16_t i = 0; i < dumpEnd; ++i)
+				uint16_t dumpStart = dumpPage * 256;
+				for (uint16_t i = dumpStart; i < dumpStart + 256; ++i)
 				{
 					if (i % 16 == 0)
 					{

@@ -14,7 +14,7 @@ public:
 
 		Pallet(RGBA color1, RGBA color2, RGBA color3)
 		{
-			color[0] = 0xff000000;
+			color[0] = 0x00000000;
 			color[1] = color1;
 			color[2] = color2;
 			color[3] = color3;
@@ -77,6 +77,17 @@ public:
 	{
 		uint16_t val16 = val;
 		_regAddr |= _addressLatch ? val : val16 << 8;
+	}
+
+	void WriteData(uint8_t val)
+	{
+		_memory.Write(_regAddr++, val);
+	}
+
+	uint8_t ReadData()
+	{
+		uint8_t ret = _regData;
+		_regData = _memory.Read(_regAddr++);
 	}
 
 	Image GetTile(uint8_t index, const Pallet& pallet);

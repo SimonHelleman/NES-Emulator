@@ -43,7 +43,6 @@ Image PPU::GetPatternTable(int table, const Pallet& pallet)
 
     constexpr unsigned int DIMENSION = 16 * 8;
     Image image = Image(DIMENSION, DIMENSION);
-    image.Clear(0xffffffff);
 
     uint16_t tableStart = table * 4096;
 
@@ -54,9 +53,9 @@ Image PPU::GetPatternTable(int table, const Pallet& pallet)
 
         size_t offset = 0;
 
-        for (int i = 0; i < 2; ++i)
+        for (size_t i = 0; i < 2; ++i)
         {
-            for (int j = 0; j < 8; ++j)
+            for (size_t j = 0; j < 8; ++j)
             {
                 tileData[i][j] = _memory.Read(tileStart + offset++);
             }
