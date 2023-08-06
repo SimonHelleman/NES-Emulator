@@ -99,11 +99,11 @@ int main()
 
 	Cartridge cart = Cartridge("nestest.nes");
 
-	PPUMapper0 ppuMemory = PPUMapper0(cart.CharacterROM());
+	PPUMapper0 ppuMemory = PPUMapper0(cart.CharacterROM(), cart.MirroringMode());
 
 	PPU ppu = PPU(ppuMemory);
 	
-	CPUMapper0 memory = CPUMapper0(&ppu, false, cart.ProgramROM());
+	CPUMapper0 memory = CPUMapper0(&ppu, cart.ProgramROM(), cart.ProgramROMSize());
 
 	Disassembler disassembler = Disassembler(memory);
 	CPU cpu = CPU(memory, &disassembler);
@@ -113,17 +113,23 @@ int main()
 	bool instructionAdded = false;
 	std::array<Disassembler::Instruction, 10> instTable;
 
-	int dumpPage = 1;
+	int dumpPage = 0;
 
 	bool continuousRun = false;
 	bool clockUntilFinished = false;
 
-	PPU::Pallet pallet = {
-		{ 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }
-	};
+	//PPU::Pallet pallet = {
+	//	{ 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }
+	//};
 
-	Image patternTable1 = ppu.GetPatternTable(0, pallet);
-	Image patternTable2 = ppu.GetPatternTable(1, pallet);
+
+	int patternTable1PalletIndex = 0;
+	int patternTable2PalletIndex = 0;
+	PPU::Pallet patternTable1Pallet = ppu.GetPallet(patternTable1PalletIndex);
+	PPU::Pallet patternTable2Pallet = ppu.GetPallet(patternTable2PalletIndex);
+
+	Image patternTable1 = ppu.GetPatternTable(0, patternTable1Pallet);
+	Image patternTable2 = ppu.GetPatternTable(1, patternTable2Pallet);
 	const Image& framebuffer = ppu.GetFramebuffer();
 
 	Texture patternTable1Tex = Texture(patternTable1, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
@@ -132,8 +138,6 @@ int main()
 
 	int framebufferScale = 1;
 	int patternTableScale = 2;
-
-
 	while (!glfwWindowShouldClose(s_window))
 	{
 		glfwPollEvents();
@@ -157,21 +161,24 @@ int main()
 		ImGui::Begin("Hexdump");
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-			ImGui::SliderInt("Page", &dumpPage, 0, 15, "%02x");
+			ImGui::SliderInt("Page", &dumpPage, 0, 0xff, "%02x");
 			if (ImGui::BeginTable("hexdump", 17))
 			{
 				uint16_t dumpStart = dumpPage * 256;
-				for (uint16_t i = dumpStart; i < dumpStart + 256; ++i)
+				uint16_t addr = dumpStart;
+				do
 				{
-					if (i % 16 == 0)
+					if (addr % 16 == 0)
 					{
 						ImGui::TableNextRow();
 						ImGui::TableNextColumn();
-						ImGui::Text("%04x:", i);
+						ImGui::Text("%04x:", addr);
 					}
 					ImGui::TableNextColumn();
-					ImGui::Text("%02x", memory.Read(i));
-				}
+					ImGui::Text("%02x", memory.Read(addr));
+					++addr;
+				} while (addr && addr < dumpStart + 256);
+
 				ImGui::EndTable();
 			}
 			ImGui::PopStyleVar();
@@ -186,10 +193,23 @@ int main()
 
 		ImGui::Begin("Pattern Tables");
 		{
+			if (ImGui::SliderInt("Left Pallet", &patternTable1PalletIndex, 0, 7, "%d"))
+			{
+				patternTable1Pallet = ppu.GetPallet(patternTable1PalletIndex);
+				patternTable1 = ppu.GetPatternTable(0, patternTable1Pallet);
+				patternTable1Tex.Update(patternTable1);
+			}
+			
+			if (ImGui::SliderInt("Right Pallet", &patternTable2PalletIndex, 0, 7, "%d"))
+			{
+				patternTable2Pallet = ppu.GetPallet(patternTable2PalletIndex);
+				patternTable2 = ppu.GetPatternTable(1, patternTable2Pallet);
+				patternTable2Tex.Update(patternTable2);
+			}
+
 			ImGui::Image((void*)(intptr_t)patternTable1Tex.TextureId(), ImVec2((float)patternTable1.Width() * patternTableScale, (float)patternTable1.Height() * patternTableScale));
 			ImGui::SameLine();
 			ImGui::Image((void*)(intptr_t)patternTable2Tex.TextureId(), ImVec2((float)patternTable2.Width() * patternTableScale, (float)patternTable2.Height() * patternTableScale));
-
 		}
 		ImGui::End();
 

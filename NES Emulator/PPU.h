@@ -70,25 +70,43 @@ public:
 
 	void WriteScroll(uint8_t val)
 	{
-		_regScroll = val;
+		uint16_t val16 = val;
+		_regAddr |= _addressLatch ? val : val16 << 8;
+		_addressLatch = !_addressLatch;
 	}
 
 	void WriteAddress(uint8_t val)
 	{
 		uint16_t val16 = val;
 		_regAddr |= _addressLatch ? val : val16 << 8;
+		_addressLatch = !_addressLatch;
 	}
 
 	void WriteData(uint8_t val)
 	{
-		_memory.Write(_regAddr++, val);
+		_memory.Write(_regAddr, val);
+		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
 	}
 
 	uint8_t ReadData()
 	{
-		uint8_t ret = _regData;
-		_regData = _memory.Read(_regAddr++);
+		// Reads before pallet RAM are delayed by 1 cycle
+		uint8_t ret = 0;
+		if (_regAddr < 0x3f00)
+		{
+			ret = _regData;
+			_regData = _memory.Read(_regAddr); // Delayed read
+			_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+			return ret;
+		}
+
+		// Pallet memory is an exception
+		ret = _memory.Read(_regAddr);
+		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+		return ret;
 	}
+
+	Pallet GetPallet(int palletIndex);
 
 	Image GetTile(uint8_t index, const Pallet& pallet);
 	Image GetPatternTable(int table, const Pallet& pallet);
@@ -101,7 +119,7 @@ private:
 	uint8_t _regStatus = 0;
 	uint8_t _regOAMAddr = 0;
 	uint8_t _regOAMData = 0;
-	uint8_t _regScroll = 0;
+	uint16_t _regScroll = 0;
 	uint16_t _regAddr = 0;
 	uint8_t _regData = 0;
 	uint8_t _regOAMDMA = 0;

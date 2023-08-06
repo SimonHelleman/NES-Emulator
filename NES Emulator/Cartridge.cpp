@@ -22,15 +22,16 @@ Cartridge::Cartridge(const char* filePath)
 	}
 
 	_mapper = ((header.flags07 >> 4) << 4) | (header.flags06 >> 4);
+	_mirroringMode = header.flags06 & 0b00000001 ? NametableMirroring::Vertical : NametableMirroring::Horizontal;
 
-	size_t programROMSize = header.programROMUnits * PROGRAM_ROM_UNIT;
-	size_t characterROMSize = header.characterROMUnits * CHARACTER_ROM_UNIT;
+	_programROMSize = header.programROMUnits * PROGRAM_ROM_UNIT;
+	_characterROMSize = header.characterROMUnits * CHARACTER_ROM_UNIT;
 
-	_programROM = std::make_unique<uint8_t[]>(programROMSize);
-	_characterROM = std::make_unique<uint8_t[]>(characterROMSize);
+	_programROM = std::make_unique<uint8_t[]>(_programROMSize);
+	_characterROM = std::make_unique<uint8_t[]>(_characterROMSize);
 
-	file.read(reinterpret_cast<char*>(_programROM.get()), programROMSize);
-	file.read(reinterpret_cast<char*>(_characterROM.get()), characterROMSize);
+	file.read(reinterpret_cast<char*>(_programROM.get()), _programROMSize);
+	file.read(reinterpret_cast<char*>(_characterROM.get()), _characterROMSize);
 
 	file.close();
 }

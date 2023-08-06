@@ -6,9 +6,9 @@ class CPUMapper0 : public MemoryMap
 {
 public:
 
-	CPUMapper0(PPU* ppu, bool is32K, const std::unique_ptr<uint8_t[]>& programROM)
+	CPUMapper0(PPU* ppu, const std::unique_ptr<uint8_t[]>& programROM, size_t programROMSize)
 		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _programROM(programROM),
-		_ppu(ppu), _is32K(is32K)
+		_programROMSize(programROMSize), _ppu(ppu)
 	{
 	}
 
@@ -23,16 +23,16 @@ public:
 private:
 	std::unique_ptr<uint8_t[]> _ram;
 	const std::unique_ptr<uint8_t[]>& _programROM;
+	size_t _programROMSize;
 	PPU* _ppu;
-	bool _is32K;
 };
 
 class PPUMapper0 : public PPUMemoryMap
 {
 public:
 	
-	PPUMapper0(const std::unique_ptr<uint8_t[]>& chrROM)
-		: PPUMemoryMap(chrROM)
+	PPUMapper0(const std::unique_ptr<uint8_t[]>& chrROM, NametableMirroring mirroring)
+		: PPUMemoryMap(chrROM, mirroring)
 	{
 	}
 

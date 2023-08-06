@@ -175,6 +175,7 @@
     <ClInclude Include="Image.h" />
     <ClInclude Include="Mapper0.h" />
     <ClInclude Include="MemoryMap.h" />
+    <ClInclude Include="NametableMirroring.h" />
     <ClInclude Include="PPU.h" />
     <ClInclude Include="RAMOnlyMemMap.h" />
     <ClInclude Include="Texture.h" />

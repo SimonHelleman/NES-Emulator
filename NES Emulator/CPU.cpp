@@ -13,6 +13,7 @@ void CPU::Clock()
 		else if ((_doIRQ && !STATUS_I) || _isIRQPending)
 		{
 			BRK();
+			//_currentInstruction.addrModeOp = &Absolute;
 			_isIRQPending = false;
 		}
 

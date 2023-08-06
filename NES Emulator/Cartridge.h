@@ -1,10 +1,22 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include "NametableMirroring.h"
+
 class Cartridge
 {
 public:
 	Cartridge(const char* filePath);
+
+	size_t ProgramROMSize() const
+	{
+		return _programROMSize;
+	}
+
+	size_t ChracterROMSize() const
+	{
+		return _characterROMSize;
+	}
 	
 	const std::unique_ptr<uint8_t[]>& ProgramROM() const
 	{
@@ -19,6 +31,11 @@ public:
 	int Mapper() const
 	{
 		return _mapper;
+	}
+
+	NametableMirroring MirroringMode() const
+	{
+		return _mirroringMode;
 	}
 
 private:
@@ -40,6 +57,9 @@ private:
 
 private:
 	int _mapper;
+	NametableMirroring _mirroringMode;
+	size_t _programROMSize;
+	size_t _characterROMSize;
 	std::unique_ptr<uint8_t[]> _programROM;
 	std::unique_ptr<uint8_t[]> _characterROM;
 };

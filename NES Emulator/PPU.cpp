@@ -4,7 +4,16 @@
 
 void PPU::Clock()
 {
+
 }
+
+PPU::Pallet PPU::GetPallet(int palletIndex)
+{
+    uint16_t startAddr = 0x3f01 + (4 * palletIndex);
+
+    return PPU::Pallet( PALLET[_memory.Read(startAddr)], PALLET[_memory.Read(startAddr + 1)], PALLET[_memory.Read(startAddr + 2)]);
+}
+
 
 Image PPU::GetTile(uint8_t index, const Pallet& pallet)
 {
@@ -36,6 +45,7 @@ Image PPU::GetTile(uint8_t index, const Pallet& pallet)
 
     return tile;
 }
+
 
 Image PPU::GetPatternTable(int table, const Pallet& pallet)
 {
