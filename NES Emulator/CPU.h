@@ -9,7 +9,7 @@ class CPU
 {
 public:
 	CPU(MemoryMap& memory, Disassembler* disassembler)
-		: _memory(memory), _opcodeMatrix(GetOpcodeMatrix(*this)), _disassembler(disassembler)
+		: _memory(memory), _opcodeMatrix(CreateOpcodeMatrix()), _disassembler(disassembler)
 	{
 	}
 
@@ -17,17 +17,8 @@ public:
 	void FetchInstruction();
 	void Reset();
 
-	void HandleNMI();
-
-	void SetIRQPin(bool b)
-	{
-		_doIRQ = b;
-	}
-
-	void SetNMIPin(bool b)
-	{
-		_doNMI = b;
-	}
+	void IRQ();
+	void NMI();
 
 	struct Opcode
 	{
@@ -91,9 +82,11 @@ public:
 		return _isInstFinished;
 	}
 
-	friend std::unique_ptr<Opcode[]> GetOpcodeMatrix(CPU& cpu);
+	std::unique_ptr<Opcode[]> CreateOpcodeMatrix();
 
 private:
+	void HandleIRQ();
+	void HandleNMI();
 
 // CPU instructions
 private:
@@ -220,7 +213,6 @@ private:
 
 	bool _doIRQ = false;
 	bool _doNMI = false;
-	bool _isIRQPending = false;
 	bool _isAccumOpcode = false;
 	bool _isInstFinished = false;
 

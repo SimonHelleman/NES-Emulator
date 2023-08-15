@@ -5,21 +5,21 @@ void CPU::Clock()
 	if (_currentState == State::Fetch)
 	{
 		_isInstFinished = false;
-		if (_doNMI)
+		
+		if (_doIRQ)
 		{
-			_isIRQPending = _doIRQ && !STATUS_I;
+			HandleIRQ();
+		}
+		else if (_doNMI)
+		{
 			HandleNMI();
 		}
-		else if ((_doIRQ && !STATUS_I) || _isIRQPending)
+		else
 		{
-			BRK();
-			//_currentInstruction.addrModeOp = &Absolute;
-			_isIRQPending = false;
+			FetchInstruction();
+			_currentState = State::AddressingMode;
 		}
 
-		FetchInstruction();
-		_currentState = State::AddressingMode;
-		return;
 	}
 
 	if (_currentState == State::AddressingMode)
@@ -39,6 +39,11 @@ void CPU::Clock()
 		_currentInstruction.operation(this);
 		_currentState = State::Fetch;
 		_isInstFinished = true;
+
+		if (_doIRQ)
+		{
+			_doIRQ = false;
+		}
 	}
 }
 
@@ -50,11 +55,6 @@ void CPU::FetchInstruction()
 	// that need more than one clock cycle will modify
 	// the cycle count
 	_currentInstruction = _opcodeMatrix[opcode];
-
-	if (_doNMI || (_doIRQ && STATUS_I))
-	{
-		_currentInstruction.clockCycles += 2;
-	}
 
 	if (_disassembler != nullptr)
 	{
@@ -80,33 +80,54 @@ void CPU::Reset()
 	_currentState = State::Fetch;
 }
 
-void CPU::HandleNMI()
+void CPU::IRQ()
 {
-	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
-	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
+	_doIRQ = !(_regStatus | STATUS_I);
+}
 
-	_regStatus &= ~STATUS_B;
-	_regStatus |= STATUS_I;
+void CPU::NMI()
+{
+	_doNMI = true;
+}
+
+void CPU::HandleIRQ()
+{
+	// Push return address to stack
+	_memory.Write(0x0100 | _regSP--, _regPC >> 8);
+	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
 
 	_memory.Write(0x0100 | _regSP--, _regStatus);
 
-	uint8_t addrLow = _memory.Read(NMI_VECTOR);
-	uint8_t addrHigh = _memory.Read(NMI_VECTOR + 1);
+	_regPC = IRQ_VECTOR;
+	Absolute();
+	_regPC = _currentAddr;
+		
+	FetchInstruction();
+	_currentInstruction.clockCycles += 7;
+	_currentState = State::AddressingMode;
+}
 
-	_regPC = addrHigh << 8 | addrLow;
+void CPU::HandleNMI()
+{
+	// Push return address to stack
+	_memory.Write(0x0100 | _regSP--, _regPC >> 8);
+	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
 
-	_doNMI = false;
+	_memory.Write(0x0100 | _regSP--, _regStatus);
 
-	_inturruptCycles = 8;
+	_regPC = NMI_VECTOR;
+	Absolute();
+	_regPC = _currentAddr;
+
+	FetchInstruction();
+	_currentInstruction.clockCycles += 8;
+	_currentState = State::AddressingMode;
 }
 
 void CPU::BRK()
 {
-	_memory.Write(0x0100 | _regSP--, (--_regPC) >> 8);
-	_memory.Write(0x0100 | _regSP--, _regPC & 0b11111111);
-
+	HandleIRQ();
 	_regStatus |= STATUS_B;
-	_regPC = IRQ_VECTOR;
 }
 
 void CPU::JSR()
@@ -124,7 +145,8 @@ void CPU::RTI()
 	uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
 	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
 
-	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
+	_regStatus &= ~STATUS_B;
+	_regPC = retAddrHigh << 8 | retAddrLow;
 }
 
 void CPU::RTS()

@@ -51,7 +51,7 @@ public:
 
 private:
 	std::unordered_map<uint16_t, Instruction> _disassembly;
-	Instruction _latestInst;
+	Instruction _latestInst = { 0 };
 	const MemoryMap& _memory;
 };
 

@@ -50,6 +50,7 @@ public:
 		uint8_t val = _regStatus;
 		_regStatus &= ~STATUS_V;
 		_addressLatch = false;
+
 		return val;
 	}
 

@@ -41,6 +41,8 @@ uint8_t PPUMapper0::Read(uint16_t addr) const
 	{
 		return _palletRAM[addr % 0x3f00];
 	}
+	
+	return 0;
 }
 
 void PPUMapper0::Write(uint16_t addr, uint8_t data)

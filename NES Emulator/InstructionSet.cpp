@@ -1,6 +1,6 @@
 #include "CPU.h"
 
-std::unique_ptr<CPU::Opcode[]> GetOpcodeMatrix(CPU& cpu)
+std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 {
 	std::unique_ptr<CPU::Opcode[]> ret = std::make_unique<CPU::Opcode[]>(256);
 
