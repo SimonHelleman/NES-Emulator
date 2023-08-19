@@ -35,78 +35,17 @@ public:
 		return _framebuffer;
 	}
 
-	void WriteControl(uint8_t val)
-	{
-		_regControl = val;
-	}
-
-	void WriteMask(uint8_t val)
-	{
-		_regMask = val;
-	}
-
-	uint8_t ReadStatus()
-	{
-		uint8_t val = _regStatus;
-		_regStatus &= ~STATUS_V;
-		_addressLatch = false;
-
-		return val;
-	}
-
-	void WriteOAMAddr(uint8_t val)
-	{
-		_regOAMAddr = val;
-	}
-
-	uint8_t ReadOAMData()
-	{
-		return _regOAMData;
-	}
-
-	void WriteOAMData(uint8_t val)
-	{
-		_regOAMData = val;
-	}
-
-	void WriteScroll(uint8_t val)
-	{
-		uint16_t val16 = val;
-		_regAddr |= _addressLatch ? val : val16 << 8;
-		_addressLatch = !_addressLatch;
-	}
-
-	void WriteAddress(uint8_t val)
-	{
-		uint16_t val16 = val;
-		_regAddr |= _addressLatch ? val : val16 << 8;
-		_addressLatch = !_addressLatch;
-	}
-
-	void WriteData(uint8_t val)
-	{
-		_memory.Write(_regAddr, val);
-		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
-	}
-
-	uint8_t ReadData()
-	{
-		// Reads before pallet RAM are delayed by 1 cycle
-		uint8_t ret = 0;
-		if (_regAddr < 0x3f00)
-		{
-			ret = _regData;
-			_regData = _memory.Read(_regAddr); // Delayed read
-			_regAddr += (_regControl | 0b00000100) ? 32 : 1;
-			return ret;
-		}
-
-		// Pallet memory is an exception
-		ret = _memory.Read(_regAddr);
-		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
-		return ret;
-	}
-
+	void WriteControl(uint8_t val);
+	void WriteMask(uint8_t val);
+	uint8_t ReadStatus();
+	void WriteOAMAddr(uint8_t val);
+	uint8_t ReadOAMData();
+	void WriteOAMData(uint8_t val);
+	void WriteScroll(uint8_t val);
+	void WriteAddress(uint8_t val);
+	void WriteData(uint8_t val);
+	uint8_t ReadData();
+	
 	Pallet GetPallet(int palletIndex);
 
 	Image GetTile(uint8_t index, const Pallet& pallet);

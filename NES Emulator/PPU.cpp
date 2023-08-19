@@ -7,6 +7,78 @@ void PPU::Clock()
 
 }
 
+void PPU::WriteControl(uint8_t val)
+{
+	_regControl = val;
+}
+
+void PPU::WriteMask(uint8_t val)
+{
+	_regMask = val;
+}
+
+uint8_t PPU::ReadStatus()
+{
+	uint8_t val = _regStatus;
+	_regStatus &= ~STATUS_V;
+	_addressLatch = false;
+
+	return val;
+}
+
+void PPU::WriteOAMAddr(uint8_t val)
+{
+	_regOAMAddr = val;
+}
+
+uint8_t PPU::ReadOAMData()
+{
+	return _regOAMData;
+}
+
+void PPU::WriteOAMData(uint8_t val)
+{
+	_regOAMData = val;
+}
+
+void PPU::WriteScroll(uint8_t val)
+{
+	uint16_t val16 = val;
+	_regAddr |= _addressLatch ? val : val16 << 8;
+	_addressLatch = !_addressLatch;
+}
+
+void PPU::WriteAddress(uint8_t val)
+{
+	uint16_t val16 = val;
+	_regAddr |= _addressLatch ? val : val16 << 8;
+	_addressLatch = !_addressLatch;
+}
+
+void PPU::WriteData(uint8_t val)
+{
+	_memory.Write(_regAddr, val);
+	_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+}
+
+uint8_t PPU::ReadData()
+{
+	// Reads before pallet RAM are delayed by 1 cycle
+	uint8_t ret = 0;
+	if (_regAddr < 0x3f00)
+	{
+		ret = _regData;
+		_regData = _memory.Read(_regAddr); // Delayed read
+		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+		return ret;
+	}
+
+	// Pallet memory is an exception
+	ret = _memory.Read(_regAddr);
+	_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+	return ret;
+}
+
 PPU::Pallet PPU::GetPallet(int palletIndex)
 {
     uint16_t startAddr = 0x3f01 + (4 * palletIndex);

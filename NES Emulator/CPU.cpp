@@ -19,7 +19,6 @@ void CPU::Clock()
 			FetchInstruction();
 			_currentState = State::AddressingMode;
 		}
-
 	}
 
 	if (_currentState == State::AddressingMode)

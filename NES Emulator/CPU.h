@@ -221,8 +221,6 @@ private:
 	Opcode _currentInstruction = { 0 };
 	State _currentState = State::Fetch;
 
-	int _inturruptCycles = 0;
-
 	std::unique_ptr<Opcode[]> _opcodeMatrix;
 
 	static constexpr uint16_t NMI_VECTOR = 0xfffa;
