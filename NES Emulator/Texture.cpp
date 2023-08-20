@@ -44,7 +44,7 @@ Texture::Texture(const Image& image, Wrapping wrapping,	Filtering filter)
 
 Texture::Texture(Texture&& other) noexcept
 {
-
+	
 	_texture = other._texture;
 	_wrapping = other._wrapping;
 	_filter = other._filter;

@@ -4,7 +4,19 @@
 
 void PPU::Clock()
 {
+    if (_scanline < 240 && _cycles < 256 && _cycles > 0)
+    {
 
+    }
+
+    if (++_cycles >= CYCLES_PER_SCANLINE)
+    {
+        _cycles = 0;
+        if (++_scanline >= SCANLINES_PER_FRAME)
+        {
+            _scanline = -1;
+        }
+    }
 }
 
 void PPU::WriteControl(uint8_t val)
@@ -22,6 +34,8 @@ uint8_t PPU::ReadStatus()
 	uint8_t val = _regStatus;
 	_regStatus &= ~STATUS_V;
 	_addressLatch = false;
+
+    _regStatus |= STATUS_V;
 
 	return val;
 }
@@ -73,21 +87,21 @@ uint8_t PPU::ReadData()
 		return ret;
 	}
 
-	// Pallet memory is an exception
+	// Palette memory is an exception
 	ret = _memory.Read(_regAddr);
 	_regAddr += (_regControl | 0b00000100) ? 32 : 1;
 	return ret;
 }
 
-PPU::Pallet PPU::GetPallet(int palletIndex)
+PPU::Palette PPU::GetPalette(int paletteIndex)
 {
-    uint16_t startAddr = 0x3f01 + (4 * palletIndex);
+    uint16_t startAddr = 0x3f01 + (4 * paletteIndex);
 
-    return PPU::Pallet( PALLET[_memory.Read(startAddr)], PALLET[_memory.Read(startAddr + 1)], PALLET[_memory.Read(startAddr + 2)]);
+    return PPU::Palette( PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)]);
 }
 
 
-Image PPU::GetTile(uint8_t index, const Pallet& pallet)
+Image PPU::GetTile(uint8_t index, const Palette& palette)
 {
     Image tile = Image(8, 8);
     uint16_t startAddr = 16 * index;
@@ -111,7 +125,7 @@ Image PPU::GetTile(uint8_t index, const Pallet& pallet)
             uint8_t lsb = (tileData[0][y] >> (7 - x)) & 0b00000001;
             uint8_t palletIndex = msb << 1 | lsb;
 
-            tile.SetPixel(x, y, pallet.color[palletIndex]);
+            tile.SetPixel(x, y, palette.color[palletIndex]);
         }
     }
 
@@ -119,7 +133,7 @@ Image PPU::GetTile(uint8_t index, const Pallet& pallet)
 }
 
 
-Image PPU::GetPatternTable(int table, const Pallet& pallet)
+Image PPU::GetPatternTable(int table, const Palette& palette)
 {
     assert(table < 2);
 
@@ -133,7 +147,7 @@ Image PPU::GetPatternTable(int table, const Pallet& pallet)
         uint16_t tileStart = tableStart + 16 * tile;
         uint8_t tileData[2][8];
 
-        size_t offset = 0;
+        uint16_t offset = 0;
 
         for (size_t i = 0; i < 2; ++i)
         {
@@ -150,7 +164,7 @@ Image PPU::GetPatternTable(int table, const Pallet& pallet)
                 uint8_t msb = (tileData[1][y] >> (7 - x)) & 0b00000001;
                 uint8_t lsb = (tileData[0][y] >> (7 - x)) & 0b00000001;
                 uint8_t palletIndex = msb << 1 | lsb;
-                image.SetPixel(8 * (tile % 16) + x, 8 * ((tile / 16) % 16) + y, pallet.color[palletIndex]);
+                image.SetPixel(8 * (tile % 16) + x, 8 * ((tile / 16) % 16) + y, palette.color[palletIndex]);
             }
         }
 

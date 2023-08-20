@@ -96,6 +96,7 @@ int main()
 
 	bool showDemoWindow = false;
 
+	size_t totalCycles = 0;
 
 	Cartridge cart = Cartridge("nestest.nes");
 
@@ -123,13 +124,13 @@ int main()
 	//};
 
 
-	int patternTable1PalletIndex = 0;
-	int patternTable2PalletIndex = 0;
-	PPU::Pallet patternTable1Pallet = ppu.GetPallet(patternTable1PalletIndex);
-	PPU::Pallet patternTable2Pallet = ppu.GetPallet(patternTable2PalletIndex);
+	int patternTable1PaletteIndex = 0;
+	int patternTable2PaletteIndex = 0;
+	PPU::Palette patternTable1Palette = ppu.GetPalette(patternTable1PaletteIndex);
+	PPU::Palette patternTable2Palette = ppu.GetPalette(patternTable2PaletteIndex);
 
-	Image patternTable1 = ppu.GetPatternTable(0, patternTable1Pallet);
-	Image patternTable2 = ppu.GetPatternTable(1, patternTable2Pallet);
+	Image patternTable1 = ppu.GetPatternTable(0, patternTable1Palette);
+	Image patternTable2 = ppu.GetPatternTable(1, patternTable2Palette);
 	const Image& framebuffer = ppu.GetFramebuffer();
 
 	Texture patternTable1Tex = Texture(patternTable1, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
@@ -144,6 +145,8 @@ int main()
 
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -193,18 +196,20 @@ int main()
 
 		ImGui::Begin("Pattern Tables");
 		{
-			if (ImGui::SliderInt("Left Pallet", &patternTable1PalletIndex, 0, 7, "%d"))
+			if (ImGui::SliderInt("Left Palette", &patternTable1PaletteIndex, 0, 7, "%d"))
 			{
-				patternTable1Pallet = ppu.GetPallet(patternTable1PalletIndex);
-				patternTable1 = ppu.GetPatternTable(0, patternTable1Pallet);
-				patternTable1Tex.Update(patternTable1);
+				patternTable1Palette = ppu.GetPalette(patternTable1PaletteIndex);
+				patternTable1 = ppu.GetPatternTable(0, patternTable1Palette);
+				//patternTable1Tex.Update(patternTable1);
+				patternTable1Tex = Texture(patternTable1, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 			}
 			
-			if (ImGui::SliderInt("Right Pallet", &patternTable2PalletIndex, 0, 7, "%d"))
+			if (ImGui::SliderInt("Right Palette", &patternTable2PaletteIndex, 0, 7, "%d"))
 			{
-				patternTable2Pallet = ppu.GetPallet(patternTable2PalletIndex);
-				patternTable2 = ppu.GetPatternTable(1, patternTable2Pallet);
-				patternTable2Tex.Update(patternTable2);
+				patternTable2Palette = ppu.GetPalette(patternTable2PaletteIndex);
+				patternTable2 = ppu.GetPatternTable(1, patternTable2Palette);
+				//patternTable2Tex.Update(patternTable2);
+				patternTable2Tex = Texture(patternTable2, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 			}
 
 			ImGui::Image((void*)(intptr_t)patternTable1Tex.TextureId(), ImVec2((float)patternTable1.Width() * patternTableScale, (float)patternTable1.Height() * patternTableScale));
@@ -212,6 +217,7 @@ int main()
 			ImGui::Image((void*)(intptr_t)patternTable2Tex.TextureId(), ImVec2((float)patternTable2.Width() * patternTableScale, (float)patternTable2.Height() * patternTableScale));
 		}
 		ImGui::End();
+		if (!cpu.IsInstFinished()) instructionAdded = false;
 
 		if (cpu.IsInstFinished() && !instructionAdded)
 		{
@@ -230,7 +236,7 @@ int main()
 			instructionAdded = true;
 		}
 
-		if (!cpu.IsInstFinished()) instructionAdded = false;
+		
 
 		ImGui::Begin("Disassembly");
 		{
@@ -256,20 +262,35 @@ int main()
 
 			if (ImGui::Button("Clock Step") || continuousRun)
 			{
-				cpu.Clock();
+				ppu.Clock();
+				if (totalCycles % 3 == 0)
+				{
+					cpu.Clock();
+				}
+				++totalCycles;
 			}
 
 			if (ImGui::Button("Instruction Step") && !continuousRun)
 			{
 				clockUntilFinished = true;
-				cpu.Clock();
+				ppu.Clock();
+				if (totalCycles % 3 == 0)
+				{
+					cpu.Clock();
+				}
+				++totalCycles;
 			}
 
 			if (clockUntilFinished)
 			{
-				if (!cpu.IsInstFinished())
+				if (cpu.GetCurrentState() != CPU::State::Fetch)
 				{
-					cpu.Clock();
+					ppu.Clock();
+					if (totalCycles % 3 == 0)
+					{
+						cpu.Clock();
+					}
+					++totalCycles;
 				}
 				else
 				{
