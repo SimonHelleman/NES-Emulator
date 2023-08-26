@@ -19,6 +19,19 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 
 	_disassembly[addr] = inst;
 	_latestInst = inst;
+
+	if (_instructionCache.size() < _instructionCacheCapacity)
+	{
+		_instructionCache.emplace_back(inst);
+	}
+	else
+	{
+		for (size_t i = 0; i < _instructionCacheCapacity - 1; ++i)
+		{
+			_instructionCache[i] = _instructionCache[i + 1];
+		}
+		_instructionCache[_instructionCacheCapacity - 1] = inst;
+	}
 }
 
 std::string Disassembler::GetDisassemblyLine(const Instruction& inst)

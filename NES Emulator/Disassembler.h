@@ -20,8 +20,14 @@ public:
 	};
 
 	Disassembler(const MemoryMap& memory)
-		: _memory(memory)
+		: Disassembler(memory, DEFUALT_CACHE_CAP)
 	{
+	}
+
+	Disassembler(const MemoryMap& memory, size_t instructionCacheSize)
+		: _memory(memory), _instructionCacheCapacity(instructionCacheSize)
+	{
+		_instructionCache.reserve(_instructionCacheCapacity);
 	}
 
 	void AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode);
@@ -42,6 +48,11 @@ public:
 		return _latestInst;
 	}
 
+	std::vector<Instruction> GetInstrctionCache()
+	{
+		return _instructionCache;
+	}
+
 	std::string GetLatestDissamblyLine() const
 	{
 		return GetDisassemblyLine(_latestInst);
@@ -53,5 +64,9 @@ private:
 	std::unordered_map<uint16_t, Instruction> _disassembly;
 	Instruction _latestInst = { 0 };
 	const MemoryMap& _memory;
+
+	std::vector<Instruction> _instructionCache;
+	size_t _instructionCacheCapacity;
+	static constexpr size_t DEFUALT_CACHE_CAP = 10;
 };
 
