@@ -18,6 +18,8 @@ public:
 		Linear
 	};
 
+	Texture() = default;
+
 	Texture(const Image& image, Wrapping wrapping = Wrapping::Repeat,
 		Filtering filter = Filtering::Nearest);
 	

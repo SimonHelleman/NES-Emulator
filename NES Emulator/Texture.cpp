@@ -49,8 +49,7 @@ Texture::Texture(Texture&& other) noexcept
 	_wrapping = other._wrapping;
 	_filter = other._filter;
 
-	other._texture = 0;
-	
+	other._texture = 0;	
 }
 
 Texture& Texture::operator=(Texture&& other) noexcept

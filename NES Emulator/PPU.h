@@ -25,7 +25,6 @@ public:
 	PPU(PPUMemoryMap& memory)
 		: _memory(memory), _framebuffer(256, 240)
 	{
-
 	}
 
 	void Clock();

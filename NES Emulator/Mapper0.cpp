@@ -54,7 +54,8 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 
 	if (addr >= 0x3f00 && addr <= 0x3fff)
 	{
-		std::cout << "pallet write\n";
+		// TODO: Buffer overrun bug here
+		std::cout << "pallet write: " << addr % 0x3f00 << '\n';
 		_palletRAM[addr % 0x3f00] = data;
 	}
 

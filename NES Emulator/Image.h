@@ -39,6 +39,9 @@ struct RGBA
 class Image
 {
 public:
+
+	Image() = default;
+
 	Image(unsigned int width, unsigned int height);
 
 	Image(const Image& other);

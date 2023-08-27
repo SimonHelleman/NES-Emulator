@@ -13,6 +13,8 @@ System::System(const Cartridge& cart)
 		_disassembler = new Disassembler(*_memoryCPU);
 		_cpu = new CPU(*_memoryCPU, _disassembler);
 	}
+
+	Reset();
 }
 
 System::~System()
@@ -22,6 +24,19 @@ System::~System()
 	delete _cpu;
 	delete _memoryPPU;
 	delete _ppu;
+}
+
+void System::Reset()
+{
+	_cpu->Reset();
+}
+
+void System::Update()
+{
+	if (_continuousRun)
+	{
+		SystemClock();
+	}
 }
 
 void System::ClockStep()

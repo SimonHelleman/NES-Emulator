@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "Cartridge.h"
 #include "Mapper0.h"
+#include "Disassembler.h"
 #include "CPU.h"
 #include "PPU.h"
 
@@ -18,20 +19,53 @@ public:
 	System(System&&) = delete;
 	System& operator=(System&&) = delete;
 
-
 	void Run(bool run)
 	{
 		_continuousRun = run;
 	}
 
+	uint64_t CycleCount() const
+	{
+		return _cycleCount;
+	}
+
+	void Reset();
+
+	void Update();
 
 	void ClockStep();
 	void InstructionStep();
 
+public:
+	MemoryMap* CPUMemory() const
+	{
+		return _memoryCPU;
+	}
+
+	Disassembler* GetDissembler() const
+	{
+		return _disassembler;
+	}
+
+	CPU* GetCPU() const
+	{
+		return _cpu;
+	}
+
+	PPUMemoryMap* PPUMemory() const
+	{
+		return _memoryPPU;
+	}
+
+	PPU* GetPPU() const 
+	{
+		return _ppu;
+	}
+
 private:
 	void SystemClock();
-private:
 
+private:
 	const Cartridge& _cart;
 
 	MemoryMap* _memoryCPU;
