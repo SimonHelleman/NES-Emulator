@@ -81,5 +81,7 @@ void Texture::Unbind()
 
 void Texture::Update(const Image& image)
 {
+	Bind();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.Width(), image.Height(), GL_RGBA, GL_UNSIGNED_BYTE, image.Data());
+	Unbind();
 }

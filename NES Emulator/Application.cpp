@@ -67,6 +67,9 @@ Application::Application()
 
 	_system.Reset();
 
+	const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
+	_framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+
 	PPU::Palette patternTable1Palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[0]);
 	PPU::Palette patternTable2Palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[1]);
 	_patternTable[0] = _system.GetPPU()->GetPatternTable(0, patternTable1Palette);
@@ -118,14 +121,11 @@ void Application::RenderUI()
 {
 	RenderHexdump();
 
-	
 	ImGui::Begin("PPU Framebuffer");
 	{
 		const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
-
-		// No this should not be static. Quick and dirty fix for now
-		static Texture framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-		ImGui::Image((void*)(intptr_t)framebufferTex.TextureId(), ImVec2((float)framebuffer.Width() * _framebufferScale, (float)framebuffer.Height() * _framebufferScale));
+		_framebufferTex.Update(framebuffer);
+		ImGui::Image((void*)(intptr_t)_framebufferTex.TextureId(), ImVec2((float)framebuffer.Width() * _framebufferScale, (float)framebuffer.Height() * _framebufferScale));
 	}
 	ImGui::End();
 
