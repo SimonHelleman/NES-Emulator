@@ -72,7 +72,7 @@ void PPU::WriteAddress(uint8_t val)
 void PPU::WriteData(uint8_t val)
 {
 	_memory.Write(_regAddr, val);
-	_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+	_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 }
 
 uint8_t PPU::ReadData()
@@ -83,13 +83,13 @@ uint8_t PPU::ReadData()
 	{
 		ret = _regData;
 		_regData = _memory.Read(_regAddr); // Delayed read
-		_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+		_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 		return ret;
 	}
 
 	// Palette memory is an exception
 	ret = _memory.Read(_regAddr);
-	_regAddr += (_regControl | 0b00000100) ? 32 : 1;
+	_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 	return ret;
 }
 
@@ -97,7 +97,7 @@ PPU::Palette PPU::GetPalette(int paletteIndex)
 {
     uint16_t startAddr = 0x3f01 + (4 * paletteIndex);
 
-    return PPU::Palette( PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)]);
+    return PPU::Palette(PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)]);
 }
 
 

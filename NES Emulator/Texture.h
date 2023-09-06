@@ -44,7 +44,7 @@ public:
 		return _wrapping;
 	}
 
-	GLuint TextureId() const
+	unsigned int TextureId() const
 	{
 		return _texture;
 	}
@@ -56,7 +56,7 @@ public:
 	void Update(const Image& image);
 
 private:
-	GLuint _texture;
+	unsigned int _texture;
 	Wrapping _wrapping;
 	Filtering _filter;
 };
