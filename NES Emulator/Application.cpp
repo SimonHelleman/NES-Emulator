@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -76,13 +77,24 @@ Application::Application()
 	_patternTable[1] = _system.GetPPU()->GetPatternTable(1, patternTable2Palette);
 	_patternTableTex[0] = Texture(_patternTable[0], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
 	_patternTableTex[1] = Texture(_patternTable[1], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
+
+	for (size_t i = 0; i < _paletteEntry.size(); ++i)
+	{
+		for (int color = 0; color < 3; ++color)
+		{
+			char buf[16];
+			snprintf(buf, 16, "Palette %ld.%d", (int)i, color);
+			_paletteEntry[i].id[color] = buf;
+		}
+	}
 }
 
 void Application::Run()
 {
 	while (!glfwWindowShouldClose(_window))
 	{
-		for (size_t i = 0; i < 200; ++i)
+		for (size_t i = 0; i < 50; ++i)
+		//for (size_t i = 0; i < 200; ++i)
 		{
 			_system.Update();
 		}
@@ -130,6 +142,7 @@ void Application::RenderUI()
 	ImGui::End();
 
 	RenderPatternTables();
+	RenderPalettes();
 	RenderDisassembly();
 	RenderControl();
 	RenderCPURegisters();
@@ -192,6 +205,28 @@ void Application::RenderPatternTables()
 	ImGui::End();
 }
 
+void Application::RenderPalettes()
+{
+	ImGui::Begin("Palettes");
+	{
+		for (size_t i = 0; i < _paletteEntry.size(); ++i)
+		{
+			PPU::Palette palette = _system.GetPPU()->GetPalette(i);
+
+			for (int color = 0; color < 4; ++color)
+			{
+				_paletteEntry[i].colorNorm[color][0] = palette.color[color].r / 255.0f;
+				_paletteEntry[i].colorNorm[color][1] = palette.color[color].g / 255.0f;
+				_paletteEntry[i].colorNorm[color][2] = palette.color[color].b / 255.0f;
+ 
+				ImGui::ColorEdit3(_paletteEntry[i].id[color].c_str(), _paletteEntry[i].colorNorm[color], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
+				if (color != 3) ImGui::SameLine();
+			}
+		}
+	}
+	ImGui::End();
+}
+
 void Application::RenderDisassembly()
 {
 	std::vector<Disassembler::Instruction> instruction = _system.GetDissembler()->GetInstrctionCache();
@@ -217,6 +252,8 @@ void Application::RenderControl()
 {
 	ImGui::Begin("Control");
 	{
+		ImGui::Text("Cycles: %ld", _system.CycleCount());
+
 		if (ImGui::Checkbox("Run", &_systemRun))
 		{
 			_system.Run(_systemRun);
@@ -230,6 +267,11 @@ void Application::RenderControl()
 		if (ImGui::Button("Instruction Step"))
 		{
 			_system.InstructionStep();
+		}
+
+		if (ImGui::Button("Frame Step"))
+		{
+			_system.FrameStep();
 		}
 	}
 	ImGui::End();

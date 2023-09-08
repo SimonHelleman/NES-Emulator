@@ -1,9 +1,11 @@
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include "PPU.h"
 
 void PPU::Clock()
 {
+    _frameComplete = false;
     if (_scanline < 240 && _cycles < 256 && _cycles > 0)
     {
 
@@ -15,6 +17,7 @@ void PPU::Clock()
         if (++_scanline >= SCANLINES_PER_FRAME)
         {
             _scanline = -1;
+            _frameComplete = true;
         }
     }
 }
@@ -71,13 +74,14 @@ void PPU::WriteAddress(uint8_t val)
 
 void PPU::WriteData(uint8_t val)
 {
+    printf("PPU: Writing %02x to %04x\n", val, _regAddr);
 	_memory.Write(_regAddr, val);
 	_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 }
 
 uint8_t PPU::ReadData()
 {
-	// Reads before pallet RAM are delayed by 1 cycle
+	// Reads before palette RAM are delayed by 1 cycle
 	uint8_t ret = 0;
 	if (_regAddr < 0x3f00)
 	{
@@ -95,9 +99,15 @@ uint8_t PPU::ReadData()
 
 PPU::Palette PPU::GetPalette(int paletteIndex)
 {
+    assert(paletteIndex < 8);
     uint16_t startAddr = 0x3f01 + (4 * paletteIndex);
 
-    return PPU::Palette(PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)]);
+    if (paletteIndex == 0)
+    {
+        return PPU::Palette(PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)], PALETTE[_memory.Read(startAddr - 1)]);
+    }
+
+    return PPU::Palette(PALETTE[_memory.Read(startAddr)], PALETTE[_memory.Read(startAddr + 1)], PALETTE[_memory.Read(startAddr + 2)], PALETTE[_memory.Read(startAddr + 3)]);
 }
 
 

@@ -35,6 +35,7 @@ public:
 
 	void ClockStep();
 	void InstructionStep();
+	void FrameStep();
 
 public:
 	MemoryMap* CPUMemory() const

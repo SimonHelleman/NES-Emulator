@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+#include <string>
 #include <GLFW/glfw3.h>
 #include "Image.h"
 #include "Texture.h"
@@ -19,6 +21,7 @@ private:
 	void RenderUI();
 	void RenderHexdump();
 	void RenderPatternTables();
+	void RenderPalettes();
 	void RenderDisassembly();
 	void RenderControl();
 	void RenderCPURegisters();
@@ -52,6 +55,16 @@ private:
 	int _patternTablePaletteIndex[2] = { 0 , 0 };
 	Image _patternTable[2];
 	Texture _patternTableTex[2];
+
+	struct PaletteEntry
+	{
+		static constexpr size_t NUM_COLORS = 4;
+		
+		std::string id[NUM_COLORS];
+		float colorNorm[NUM_COLORS][3];
+	};
+
+	std::array<PaletteEntry, 8> _paletteEntry;
 
 	Texture _framebufferTex;
 

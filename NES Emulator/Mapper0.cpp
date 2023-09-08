@@ -54,7 +54,12 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 
 	if (addr >= 0x3f00 && addr <= 0x3fff)
 	{
-		std::cout << "pallet write: index = " << addr % 32 << " data = " << (int)data << '\n';
+		//std::cout << "pallet write: index = " << addr % 32 << " data = " << (int)data << '\n';
+		if (data >= PPU::PALETTE_LEN)
+		{
+			std::cerr << "WARNING: Palette Index Written falls outside of bounds. Write ignored\n";
+			return;
+		}
 		_palletRAM[addr % 32] = data;
 	}
 

@@ -63,6 +63,22 @@ void System::InstructionStep()
 	}
 }
 
+void System::FrameStep()
+{
+	if (!_continuousRun)
+	{
+		while (_ppu->IsFrameComplete())
+		{
+			SystemClock();
+		}
+
+		while (!_ppu->IsFrameComplete())
+		{
+			SystemClock();
+		}
+	}
+}
+
 void System::SystemClock()
 {
 	_ppu->Clock();
