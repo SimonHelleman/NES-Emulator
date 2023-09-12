@@ -30,9 +30,6 @@
     <ClCompile Include="Disassembler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RamOnlyMemMap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MemoryMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -90,9 +87,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MemoryMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RAMOnlyMemMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Disassembler.h">

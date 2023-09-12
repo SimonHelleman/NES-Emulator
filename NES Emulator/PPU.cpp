@@ -32,12 +32,17 @@ void PPU::WriteMask(uint8_t val)
 	_regMask = val;
 }
 
-uint8_t PPU::ReadStatus()
+uint8_t PPU::ReadStatus(bool silent)
 {
 	uint8_t val = _regStatus;
-	_regStatus &= ~STATUS_V;
-	_addressLatch = false;
 
+    if (!silent)
+    {
+	    _regStatus &= ~STATUS_V;
+	    _addressLatch = false;
+    }
+
+    // Hack to keep code running until renderer is implemented
     _regStatus |= STATUS_V;
 
 	return val;

@@ -165,7 +165,6 @@
     <ClCompile Include="Mapper0.cpp" />
     <ClCompile Include="MemoryMap.cpp" />
     <ClCompile Include="PPU.cpp" />
-    <ClCompile Include="RamOnlyMemMap.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
@@ -180,7 +179,6 @@
     <ClInclude Include="MemoryMap.h" />
     <ClInclude Include="NametableMirroring.h" />
     <ClInclude Include="PPU.h" />
-    <ClInclude Include="RAMOnlyMemMap.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Texture.h" />
   </ItemGroup>

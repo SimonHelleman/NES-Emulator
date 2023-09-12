@@ -1,10 +1,10 @@
 #include "Mapper0.h"
 #include <iostream>
 
-uint8_t CPUMapper0::Read(uint16_t addr) const
+uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 {
 	if (addr <= 0x1fff) return _ram[addr % RAM_SIZE];
-	if (addr == 0x2002) return _ppu->ReadStatus();
+	if (addr == 0x2002) return silent ? _ppu->ReadStatus(true) : _ppu->ReadStatus(false);
 	if (addr == 0x2004) return _ppu->ReadOAMData();
 	if (addr == 0x2007) return _ppu->ReadData();
 	if (addr >= 0x8000)
@@ -30,7 +30,7 @@ void CPUMapper0::Write(uint16_t addr, uint8_t data)
 	if (addr == 0x2007) _ppu->WriteData(data);
 }
 
-uint8_t PPUMapper0::Read(uint16_t addr) const
+uint8_t PPUMapper0::Read(uint16_t addr, bool silent) const
 {
 	if (addr <= 0x1fff)
 	{

@@ -19,7 +19,7 @@ public:
 
 private:
 	void RenderUI();
-	void RenderHexdump();
+	void RenderHexdump(const MemoryMap* memory, const char* title, int* page);
 	void RenderPatternTables();
 	void RenderPalettes();
 	void RenderDisassembly();
@@ -47,7 +47,8 @@ private:
 	Cartridge _cart;
 	System _system;
 
-	int _hexdumpPage = 0;
+	int _hexdumpPageCPU = 0;
+	int _hexdumpPagePPU = 0;
 	
 	int _framebufferScale = 1;
 	int _patternTableScale = 2;

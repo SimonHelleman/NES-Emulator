@@ -131,7 +131,8 @@ void Application::Run()
 
 void Application::RenderUI()
 {
-	RenderHexdump();
+	RenderHexdump(_system.CPUMemory(), "CPU Hexdump", &_hexdumpPageCPU);
+	RenderHexdump(_system.PPUMemory(), "PPU Hexdump", &_hexdumpPagePPU);
 
 	ImGui::Begin("PPU Framebuffer");
 	{
@@ -148,15 +149,15 @@ void Application::RenderUI()
 	RenderCPURegisters();
 }
 
-void Application::RenderHexdump()
+void Application::RenderHexdump(const MemoryMap* memory, const char* title, int* page)
 {
-	ImGui::Begin("Hexdump");
+	ImGui::Begin(title);
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-		ImGui::SliderInt("Page", &_hexdumpPage, 0, 0xff, "%02x");
+		ImGui::SliderInt("Page", page, 0, 0xff, "%02x");
 		if (ImGui::BeginTable("hexdump", 17))
 		{
-			uint16_t dumpStart = _hexdumpPage * 256;
+			uint16_t dumpStart = *page * 256;
 			uint16_t addr = dumpStart;
 			do
 			{
@@ -167,7 +168,7 @@ void Application::RenderHexdump()
 					ImGui::Text("%04x:", addr);
 				}
 				ImGui::TableNextColumn();
-				ImGui::Text("%02x", _system.CPUMemory()->Read(addr));
+				ImGui::Text("%02x", memory->Read(addr, true));
 				++addr;
 			} while (addr && addr < dumpStart + 256);
 

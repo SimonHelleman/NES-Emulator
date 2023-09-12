@@ -12,7 +12,7 @@ public:
 	{
 	}
 
-	uint8_t Read(uint16_t addr) const override;
+	uint8_t Read(uint16_t addr, bool silent = false) const override;
 
 	void Write(uint16_t addr, uint8_t data) override;
 	
@@ -36,7 +36,7 @@ public:
 	{
 	}
 
-	uint8_t Read(uint16_t addr) const override;
+	uint8_t Read(uint16_t addr, bool silent = false) const override;
 	void Write(uint16_t addr, uint8_t data) override;
 
 };

@@ -41,7 +41,7 @@ public:
 
 	void WriteControl(uint8_t val);
 	void WriteMask(uint8_t val);
-	uint8_t ReadStatus();
+	uint8_t ReadStatus(bool silent = false);
 	void WriteOAMAddr(uint8_t val);
 	uint8_t ReadOAMData();
 	void WriteOAMData(uint8_t val);
