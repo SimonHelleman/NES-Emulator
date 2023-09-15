@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <vector>
+#include <map>
 
 #include "MemoryMap.h"
 #include "CPUAdressingMode.h"
@@ -33,7 +34,7 @@ public:
 	void AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode);
 
 
-	const std::unordered_map<uint16_t, Instruction>& GetDisassembly() const
+	const std::map<uint16_t, Instruction>& GetDisassembly() const
 	{
 		return _disassembly;
 	}
@@ -58,10 +59,12 @@ public:
 		return GetDisassemblyLine(_latestInst);
 	}
 
+	void WriteToFile(const char* filepath) const;
+
 	static std::string GetDisassemblyLine(const Instruction& inst);
 
 private:
-	std::unordered_map<uint16_t, Instruction> _disassembly;
+	std::map<uint16_t, Instruction> _disassembly;
 	Instruction _latestInst = { 0 };
 	const MemoryMap& _memory;
 

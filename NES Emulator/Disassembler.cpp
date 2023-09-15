@@ -1,5 +1,5 @@
-#include <iostream>
 #include <cstdio>
+#include <fstream>
 #include "Disassembler.h"
 
 void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size, AdressingMode addrMode)
@@ -31,6 +31,19 @@ void Disassembler::AddInstruction(uint16_t addr, const char* mnemonic, int size,
 			_instructionCache[i] = _instructionCache[i + 1];
 		}
 		_instructionCache[_instructionCacheCapacity - 1] = inst;
+	}
+}
+
+void Disassembler::WriteToFile(const char* filepath) const
+{
+	std::ofstream file(filepath);
+
+	for (const auto& i : _disassembly)
+	{
+		char addrStr[8];
+
+		snprintf(addrStr, 8, "%04x", i.first);
+		file << addrStr << "    " << GetDisassemblyLine(i.second) << '\n';
 	}
 }
 

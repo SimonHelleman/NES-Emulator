@@ -142,8 +142,17 @@ void Application::RenderUI()
 	}
 	ImGui::End();
 
-	RenderPatternTables();
+	ImGui::Begin("Debug");
+	{
+		if (ImGui::Button("Write Disassembly"))
+		{
+			_system.GetDissembler()->WriteToFile("disassembly.s");
+		}
+	}
+	ImGui::End();
+
 	RenderPalettes();
+	RenderPatternTables();
 	RenderDisassembly();
 	RenderControl();
 	RenderCPURegisters();
@@ -179,33 +188,6 @@ void Application::RenderHexdump(const MemoryMap* memory, const char* title, int*
 	ImGui::End();
 }
 
-void Application::RenderPatternTables()
-{
-	ImGui::Begin("Pattern Tables");
-	{
-		if (ImGui::SliderInt("Left Palette", &_patternTablePaletteIndex[0], 0, 7, "%d"))
-		{
-			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[0]);
-			_patternTable[0] = _system.GetPPU()->GetPatternTable(0, palette);
-			//patternTable1Tex.Update(patternTable1);
-			_patternTableTex[0] = Texture(_patternTable[0], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-		}
-
-		if (ImGui::SliderInt("Right Palette", &_patternTablePaletteIndex[1], 0, 7, "%d"))
-		{
-			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[1]);
-			_patternTable[1] = _system.GetPPU()->GetPatternTable(1, palette);
-			//patternTable2Tex.Update(patternTable2);
-			_patternTableTex[1] = Texture(_patternTable[1], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-		}
-
-		ImGui::Image((void*)(intptr_t)_patternTableTex[0].TextureId(), ImVec2((float)_patternTable[0].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
-		ImGui::SameLine();
-		ImGui::Image((void*)(intptr_t)_patternTableTex[1].TextureId(), ImVec2((float)_patternTable[1].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
-	}
-	ImGui::End();
-}
-
 void Application::RenderPalettes()
 {
 	ImGui::Begin("Palettes");
@@ -216,9 +198,21 @@ void Application::RenderPalettes()
 
 			for (int color = 0; color < 4; ++color)
 			{
-				_paletteEntry[i].colorNorm[color][0] = palette.color[color].r / 255.0f;
-				_paletteEntry[i].colorNorm[color][1] = palette.color[color].g / 255.0f;
-				_paletteEntry[i].colorNorm[color][2] = palette.color[color].b / 255.0f;
+				float newR = palette.color[color].r / 255.0f;
+				float newG = palette.color[color].g / 255.0f;
+				float newB = palette.color[color].b / 255.0f;
+
+				float oldR = _paletteEntry[i].colorNorm[color][0];
+				float oldG = _paletteEntry[i].colorNorm[color][1];
+				float oldB = _paletteEntry[i].colorNorm[color][2];
+
+				if (newR != oldR || newG != oldG || newB != oldB)
+				{
+					_paletteEntry[i].colorNorm[color][0] = newR;
+					_paletteEntry[i].colorNorm[color][1] = newG;
+					_paletteEntry[i].colorNorm[color][2] = newB;
+					_updateTable = true;
+				}
  
 				ImGui::ColorEdit3(_paletteEntry[i].id[color].c_str(), _paletteEntry[i].colorNorm[color], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
 				if (color != 3) ImGui::SameLine();
@@ -226,6 +220,33 @@ void Application::RenderPalettes()
 		}
 	}
 	ImGui::End();
+}
+
+void Application::RenderPatternTables()
+{
+	ImGui::Begin("Pattern Tables");
+	{
+		if (ImGui::SliderInt("Left Palette", &_patternTablePaletteIndex[0], 0, 7, "%d") || _updateTable)
+		{
+			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[0]);
+			_patternTable[0] = _system.GetPPU()->GetPatternTable(0, palette);
+			_patternTableTex[0].Update(_patternTable[0]);
+		}
+
+		if (ImGui::SliderInt("Right Palette", &_patternTablePaletteIndex[1], 0, 7, "%d") || _updateTable)
+		{
+			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[1]);
+			_patternTable[1] = _system.GetPPU()->GetPatternTable(1, palette);
+			_patternTableTex[1].Update(_patternTable[1]);
+		}
+
+		ImGui::Image((void*)(intptr_t)_patternTableTex[0].TextureId(), ImVec2((float)_patternTable[0].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
+		ImGui::SameLine();
+		ImGui::Image((void*)(intptr_t)_patternTableTex[1].TextureId(), ImVec2((float)_patternTable[1].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
+	}
+	ImGui::End();
+
+	_updateTable = false;
 }
 
 void Application::RenderDisassembly()

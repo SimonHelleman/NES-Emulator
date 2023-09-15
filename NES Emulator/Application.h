@@ -53,6 +53,7 @@ private:
 	int _framebufferScale = 1;
 	int _patternTableScale = 2;
 
+	bool _updatePalette = false;
 	int _patternTablePaletteIndex[2] = { 0 , 0 };
 	Image _patternTable[2];
 	Texture _patternTableTex[2];
