@@ -4,6 +4,8 @@
 #include <string>
 #include "NametableMirroring.h"
 
+class PPU;
+
 class MemoryMap
 {
 public:
@@ -13,6 +15,22 @@ public:
 	std::string HexDump();
 
 	static constexpr size_t ADRESSABLE_RANGE = 65536;
+};
+
+class CPUMemoryMap : public MemoryMap
+{
+public:
+	CPUMemoryMap(PPU* ppu)
+		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _ppu(ppu)
+	{
+	}
+
+public:
+	static constexpr size_t RAM_SIZE = 2048;
+
+protected:
+	std::unique_ptr<uint8_t[]> _ram;
+	PPU* _ppu;
 };
 
 class PPUMemoryMap : public MemoryMap
@@ -27,9 +45,6 @@ public:
 			_palletRAM[i] = 0;
 		}
 	}
-
-	virtual uint8_t Read(uint16_t addr, bool silent = false) const = 0;
-	virtual void Write(uint16_t addr, uint8_t data) = 0;
 
 protected:
 	const std::unique_ptr<uint8_t[]>& _chrROM;

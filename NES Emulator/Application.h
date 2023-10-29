@@ -12,7 +12,8 @@ class Application
 public:
 	static Application& Get()
 	{
-		return s_instance;
+		static Application app;
+		return app;
 	}
 
 	void Run();
@@ -71,7 +72,5 @@ private:
 	Texture _framebufferTex;
 
 	bool _systemRun = false;
-
-	static Application s_instance;
 };
 

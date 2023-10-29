@@ -7,9 +7,6 @@
 #include <glad/glad.h>
 #include "Application.h"
 
-
-Application Application::s_instance;
-
 Application::Application()
 	: _cart("nestest.nes"), _system(_cart)
 {
