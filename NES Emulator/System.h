@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <set>
 #include "Cartridge.h"
 #include "Mapper0.h"
 #include "Disassembler.h"
@@ -24,6 +25,16 @@ public:
 		_continuousRun = run;
 	}
 
+	bool IsRunning()
+	{
+		return _continuousRun;
+	}
+
+	void EnableBreakpoints(bool enable)
+	{
+		_enableBreakpoints = enable;
+	}
+
 	uint64_t CycleCount() const
 	{
 		return _cycleCount;
@@ -36,6 +47,10 @@ public:
 	void ClockStep();
 	void InstructionStep();
 	void FrameStep();
+
+	void AddBreakpoint(uint16_t addr);
+	void RemoveBreakpoint(uint16_t addr);
+	const std::set<uint16_t>& GetBreakpoints() const;
 
 public:
 	MemoryMap* CPUMemory() const
@@ -72,11 +87,14 @@ private:
 	MemoryMap* _memoryCPU;
 	Disassembler* _disassembler;
 	CPU* _cpu;
+	std::set<uint16_t> _breakpoints;
 
 	PPUMemoryMap* _memoryPPU;
 	PPU* _ppu;
 
 	bool _continuousRun = false;
+	bool _enableBreakpoints = false;
+	bool _haltedBreakpoint = false;
 	uint64_t _cycleCount = 0;
 };
 

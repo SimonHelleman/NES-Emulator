@@ -25,6 +25,7 @@ private:
 	void RenderPalettes();
 	void RenderDisassembly();
 	void RenderControl();
+	void RenderBreakpoints();
 	void RenderCPURegisters();
 
 private:
@@ -42,7 +43,7 @@ private:
 private:
 	const char* _windowTitle = "NES Emulator";
 	int _windowWidth = 1280;
-	int _windowHeight = 720;
+	int _windowHeight = 800;
 	GLFWwindow* _window = nullptr;
 
 	Cartridge _cart;
@@ -71,6 +72,9 @@ private:
 
 	Texture _framebufferTex;
 
+
+	bool _enableBreakpoints = true;
+	char _breakpointText[8];
 	bool _systemRun = false;
 };
 

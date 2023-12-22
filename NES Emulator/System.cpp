@@ -13,8 +13,6 @@ System::System(const Cartridge& cart)
 		_disassembler = new Disassembler(*_memoryCPU);
 		_cpu = new CPU(*_memoryCPU, _disassembler);
 	}
-
-	Reset();
 }
 
 System::~System()
@@ -35,6 +33,18 @@ void System::Update()
 {
 	if (_continuousRun)
 	{
+		if (_enableBreakpoints)
+		{
+			const auto& search = _breakpoints.find(_cpu->GetProgramCounter());
+			if (search != _breakpoints.end() && _cpu->GetCurrentState() == CPU::State::Fetch)
+			{
+				if (!_haltedBreakpoint)
+				{
+					_continuousRun = false;
+					_haltedBreakpoint = true;
+				}
+			}
+		}
 		SystemClock();
 	}
 }
@@ -79,12 +89,28 @@ void System::FrameStep()
 	}
 }
 
+void System::AddBreakpoint(uint16_t addr)
+{
+	_breakpoints.insert(addr);
+}
+
+void System::RemoveBreakpoint(uint16_t addr)
+{
+	_breakpoints.erase(addr);
+}
+
+const std::set<uint16_t>& System::GetBreakpoints() const
+{
+	return _breakpoints;
+}
+
 void System::SystemClock()
 {
 	_ppu->Clock();
 	
 	if (++_cycleCount % 3 == 0)
 	{
+		_haltedBreakpoint = false;
 		_cpu->Clock();
 	}
 }

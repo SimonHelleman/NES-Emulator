@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
@@ -80,21 +81,27 @@ Application::Application()
 		for (int color = 0; color < 3; ++color)
 		{
 			char buf[16];
-			snprintf(buf, 16, "Palette %ld.%d", (int)i, color);
+			snprintf(buf, 16, "Palette %d.%d", (int)i, color);
 			_paletteEntry[i].id[color] = buf;
 		}
 	}
+
 }
 
 void Application::Run()
 {
+	uint16_t breakpoint = 0xc015;
+	_system.AddBreakpoint(breakpoint);
+	_system.EnableBreakpoints(true);
 	while (!glfwWindowShouldClose(_window))
 	{
 		for (size_t i = 0; i < 50; ++i)
 		//for (size_t i = 0; i < 200; ++i)
 		{
 			_system.Update();
+			_systemRun = _system.IsRunning();
 		}
+
 		glfwPollEvents();
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -152,6 +159,7 @@ void Application::RenderUI()
 	RenderPatternTables();
 	RenderDisassembly();
 	RenderControl();
+	RenderBreakpoints();
 	RenderCPURegisters();
 }
 
@@ -189,7 +197,7 @@ void Application::RenderPalettes()
 {
 	ImGui::Begin("Palettes");
 	{
-		for (size_t i = 0; i < _paletteEntry.size(); ++i)
+		for (int i = 0; i < _paletteEntry.size(); ++i)
 		{
 			PPU::Palette palette = _system.GetPPU()->GetPalette(i);
 
@@ -253,7 +261,7 @@ void Application::RenderDisassembly()
 	{
 		if (ImGui::BeginTable("disassembly", 2))
 		{
-			for (int i = 0; i < instruction.size(); ++i)
+			for (size_t i = 0; i < instruction.size(); ++i)
 			{
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
@@ -273,10 +281,8 @@ void Application::RenderControl()
 	{
 		ImGui::Text("Cycles: %ld", _system.CycleCount());
 
-		if (ImGui::Checkbox("Run", &_systemRun))
-		{
-			_system.Run(_systemRun);
-		}
+		ImGui::Checkbox("Run", &_systemRun);
+		_system.Run(_systemRun);
 
 		if (ImGui::Button("Clock Step"))
 		{
@@ -291,6 +297,43 @@ void Application::RenderControl()
 		if (ImGui::Button("Frame Step"))
 		{
 			_system.FrameStep();
+		}
+	}
+	ImGui::End();
+}
+
+void Application::RenderBreakpoints()
+{
+	ImGui::Begin("Breakpoints");
+	{
+		if (ImGui::Checkbox("Enable", &_enableBreakpoints))
+		{
+			_system.EnableBreakpoints(_enableBreakpoints);
+		}
+
+		// Setting buffer size to 5 just to limit it to a 4 digit number
+		ImGui::InputText("Address", _breakpointText, 5, ImGuiInputTextFlags_CharsHexadecimal);
+
+		if (ImGui::Button("Add Breakpoint") && strlen(_breakpointText) > 0)
+		{
+			uint16_t addr;
+			std::stringstream ss;
+			ss << std::hex << _breakpointText;
+			ss >> addr;
+			_system.AddBreakpoint(addr);
+		}
+
+		for (uint16_t b : _system.GetBreakpoints())
+		{
+			ImGui::Text("%04x", b);
+			ImGui::SameLine();
+			char buf[16];
+			snprintf(buf, 16, "Delete##%d", b);
+			if (ImGui::Button(buf))
+			{
+				_system.RemoveBreakpoint(b);
+				break; // Sneaky break. A tad hacky but it works
+			}
 		}
 	}
 	ImGui::End();

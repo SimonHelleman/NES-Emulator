@@ -43,26 +43,23 @@ void CPU::Clock()
 		{
 			_doIRQ = false;
 		}
+
+		if (_disassembler != nullptr)
+		{
+			Opcode next = _opcodeMatrix[_memory.Read(_regPC, true)];
+			_disassembler->AddInstruction(_regPC, next.mnemonic, next.size, next.addrMode);
+		}
 	}
 }
 
 void CPU::FetchInstruction()
 {
-	uint8_t opcode = _memory.Read(_regPC);
+	uint8_t opcode = _memory.Read(_regPC++);
 
 	// The copy is intentional since operations
 	// that need more than one clock cycle will modify
 	// the cycle count
 	_currentInstruction = _opcodeMatrix[opcode];
-
-	if (_disassembler != nullptr)
-	{
-		_disassembler->AddInstruction(_regPC++, _currentInstruction.mnemonic, _currentInstruction.size, _currentInstruction.addrMode);
-	}
-	else
-	{
-		++_regPC;
-	}
 }
 
 void CPU::Reset()
@@ -77,6 +74,12 @@ void CPU::Reset()
 	Absolute();
 	_regPC = _currentAddr;
 	_currentState = State::Fetch;
+
+	if (_disassembler != nullptr)
+	{
+		Opcode inst = _opcodeMatrix[_memory.Read(_regPC)];
+		_disassembler->AddInstruction(_regPC, inst.mnemonic, inst.size, inst.addrMode);
+	}
 }
 
 void CPU::IRQ()
