@@ -1,5 +1,5 @@
+#include "Logger.h"
 #include "Mapper0.h"
-#include <iostream>
 
 uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 {
@@ -15,6 +15,10 @@ uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 		return _programROM[index];
 	}
 
+	if (!silent)
+	{
+		WARN("[MAP0_CPU] Unmapped read from 0x" + Int16HexString(addr));
+	}
 	return 0;
 }
 
@@ -28,6 +32,8 @@ void CPUMapper0::Write(uint16_t addr, uint8_t data)
 	if (addr == 0x2005) _ppu->WriteScroll(data);
 	if (addr == 0x2006) _ppu->WriteAddress(data);
 	if (addr == 0x2007) _ppu->WriteData(data);
+
+	WARN("[MAP0_CPU] Unmapped write to 0x" + Int16HexString(addr));
 }
 
 uint8_t PPUMapper0::Read(uint16_t addr, bool silent) const
@@ -42,6 +48,10 @@ uint8_t PPUMapper0::Read(uint16_t addr, bool silent) const
 		return _palletRAM[addr % 32];
 	}
 	
+	if (!silent)
+	{
+		WARN("[MAP0_PPU] Unmapped read from 0x" + Int16HexString(addr));
+	}
 	return 0;
 }
 
@@ -57,10 +67,11 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 		//std::cout << "pallet write: index = " << addr % 32 << " data = " << (int)data << '\n';
 		if (data >= PPU::PALETTE_LEN)
 		{
-			std::cerr << "WARNING: Palette Index Written falls outside of bounds. Write ignored\n";
+			WARN("[MAP0_PPU] Palette index written falls outside of bounds! Write ignored.")
 			return;
 		}
 		_palletRAM[addr % 32] = data;
 	}
 
+	WARN("[MAP0_PPU] Unmapped write to 0x" + Int16HexString(addr));
 }

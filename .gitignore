@@ -88,6 +88,17 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+# 2023-12-23
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+Makefile
+*.make
+
+.vscode/
+
+
 # Chutzpah Test files
 _Chutzpah*
 

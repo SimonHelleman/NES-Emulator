@@ -1,7 +1,10 @@
 #pragma once
+#include <utility>
 #include <array>
+#include <vector>
 #include <string>
 #include <GLFW/glfw3.h>
+#include "Logger.h"
 #include "Image.h"
 #include "Texture.h"
 #include "Cartridge.h"
@@ -27,6 +30,7 @@ private:
 	void RenderControl();
 	void RenderBreakpoints();
 	void RenderCPURegisters();
+	void RenderLog();
 
 private:
 	Application();
@@ -75,6 +79,16 @@ private:
 
 	bool _enableBreakpoints = true;
 	char _breakpointText[8];
+
 	bool _systemRun = false;
+
+#ifdef DEBUG
+	bool _logIncludeDebug = true;
+#endif
+	bool _logIncludeInfo = true;
+	bool _logIncludeWarn = true;
+	bool _logIncludeError = true;
+
+	std::vector<std::pair<std::string, LogLevel>> _log;
 };
 

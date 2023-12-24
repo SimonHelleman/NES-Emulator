@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <sstream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -11,9 +10,22 @@
 Application::Application()
 	: _cart("nestest.nes"), _system(_cart)
 {
+	Logger& logger = Logger::Get();
+	logger.AddOutput(LogLevel::Debug | LogLevel::Info, Logger::StandardOutput);
+	logger.AddOutput(LogLevel::Warning | LogLevel::Error, Logger::StandardErrorOutput);
+
+	logger.AddOutput(LogLevel::All, [this](std::string message, LogLevel level) {
+		_log.emplace_back(message, level);
+	});
+
+	LOG_DEBUG("debug message");
+	INFO("info message");
+	WARN("warning message");
+	ERROR("error message");
+
 	if (!glfwInit())
 	{
-		std::cerr << "Failed to init GLFW\n";
+		ERROR_FL("Failed to init GLFW");
 		return;
 	}
 
@@ -25,7 +37,7 @@ Application::Application()
 
 	if (!_window)
 	{
-		std::cerr << "Failed to create GLFW window\n";
+		ERROR_FL("Failed to create GLFW window");
 		glfwTerminate();
 		return;
 	}
@@ -34,7 +46,7 @@ Application::Application()
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cerr << "Failed to initialize GLAD\n";
+		ERROR_FL("Failed to initialize GLAD");
 		return;
 	}
 
@@ -90,7 +102,7 @@ Application::Application()
 
 void Application::Run()
 {
-	uint16_t breakpoint = 0xc015;
+	uint16_t breakpoint = 0xc049;
 	_system.AddBreakpoint(breakpoint);
 	_system.EnableBreakpoints(true);
 	while (!glfwWindowShouldClose(_window))
@@ -161,6 +173,7 @@ void Application::RenderUI()
 	RenderControl();
 	RenderBreakpoints();
 	RenderCPURegisters();
+	RenderLog();
 }
 
 void Application::RenderHexdump(const MemoryMap* memory, const char* title, int* page)
@@ -362,6 +375,51 @@ void Application::RenderCPURegisters()
 		flags[8] = '\0';
 
 		ImGui::Text("Status: %02x [%s]", status, flags);
+	}
+	ImGui::End();
+}
+
+void Application::RenderLog()
+{
+	ImGui::Begin("Log");
+	{
+#ifdef DEBUG
+		ImGui::Checkbox("Debug", &_logIncludeDebug);
+		ImGui::SameLine();
+#endif
+		ImGui::Checkbox("Info", &_logIncludeInfo);
+		ImGui::SameLine();
+		
+		ImGui::Checkbox("Warnings", &_logIncludeWarn);
+		ImGui::SameLine();
+
+		ImGui::Checkbox("Error", &_logIncludeError);
+
+		for (size_t i = 0; i < _log.size(); ++i)
+		{
+#ifdef DEBUG
+			if (_log[i].second == LogLevel::Debug && _logIncludeDebug)
+			{
+				ImGui::Text(_log[i].first.c_str());				
+			}
+#endif
+			if (_log[i].second == LogLevel::Info && _logIncludeInfo)
+			{
+				ImGui::Text(_log[i].first.c_str());
+			}
+			else if (_log[i].second == LogLevel::Warning && _logIncludeWarn)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.647f, 0.0f, 1.0f));
+				ImGui::Text(_log[i].first.c_str());
+				ImGui::PopStyleColor();
+			}
+			else if (_log[i].second == LogLevel::Error && _logIncludeError)
+			{
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+				ImGui::Text(_log[i].first.c_str());
+				ImGui::PopStyleColor();
+			}
+		}
 	}
 	ImGui::End();
 }

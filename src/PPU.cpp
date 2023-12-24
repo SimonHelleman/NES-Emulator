@@ -1,6 +1,5 @@
 #include <cassert>
-#include <cstdio>
-#include <iostream>
+#include "logger.h"
 #include "PPU.h"
 
 void PPU::Clock()
@@ -79,7 +78,7 @@ void PPU::WriteAddress(uint8_t val)
 
 void PPU::WriteData(uint8_t val)
 {
-    printf("PPU: Writing %02x to %04x\n", val, _regAddr);
+    LOG_DEBUG_FL("[PPU] Writing " + Int8HexString(val) + " to " + Int16HexString(_regAddr));
 	_memory.Write(_regAddr, val);
 	_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 }
