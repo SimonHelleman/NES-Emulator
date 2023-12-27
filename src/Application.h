@@ -30,6 +30,7 @@ private:
 	void RenderControl();
 	void RenderBreakpoints();
 	void RenderCPURegisters();
+	void RenderPPURegisters();
 	void RenderLog();
 
 private:
@@ -77,14 +78,14 @@ private:
 	Texture _framebufferTex;
 
 
-	bool _enableBreakpoints = true;
 	char _breakpointText[8];
+	bool _enableBreakpoints = true;
 
 	bool _systemRun = false;
 
-#ifdef DEBUG
+
 	bool _logIncludeDebug = true;
-#endif
+
 	bool _logIncludeInfo = true;
 	bool _logIncludeWarn = true;
 	bool _logIncludeError = true;

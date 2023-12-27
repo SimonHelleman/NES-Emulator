@@ -55,6 +55,21 @@ public:
 	Image GetTile(uint8_t index, const Palette& palette);
 	Image GetPatternTable(int table, const Palette& palette);
 
+	uint16_t AddressReg()
+	{
+		return _regAddr;
+	}
+
+	uint8_t DataReg()
+	{
+		return _regData;
+	}
+
+	uint8_t ControlReg()
+	{
+		return _regControl;
+	}
+
 private:
 	PPUMemoryMap& _memory;
 

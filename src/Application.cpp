@@ -173,6 +173,7 @@ void Application::RenderUI()
 	RenderControl();
 	RenderBreakpoints();
 	RenderCPURegisters();
+	RenderPPURegisters();
 	RenderLog();
 }
 
@@ -379,6 +380,29 @@ void Application::RenderCPURegisters()
 	ImGui::End();
 }
 
+void Application::RenderPPURegisters()
+{
+	ImGui::Begin("PPU Registers");
+	{
+		ImGui::Text("Addr: %04x", _system.GetPPU()->AddressReg());
+		ImGui::Text("Data: %02x", _system.GetPPU()->DataReg());
+	
+		char flags[9];
+		uint8_t control = _system.GetPPU()->ControlReg();
+		flags[0] = control & PPU::CONTROL_V ? 'V' : '-';
+		flags[1] = control & PPU::CONTROL_P ? 'P' : '-';
+		flags[2] = control & PPU::CONTROL_H ? 'H' : '-';
+		flags[3] = control & PPU::CONTROL_B ? 'B' : '-';
+		flags[4] = control & PPU::CONTROL_S ? 'S' : '-';
+		flags[5] = control & PPU::CONTROL_I ? 'I' : '-';
+		flags[6] = control & PPU::CONTROL_2 ? '2' : '-';
+		flags[7] = control & PPU::CONTROL_1 ? '1' : '-';
+		flags[8] = '\0';
+		ImGui::Text("Control: %02x [%s]", control, flags);
+	}
+	ImGui::End();
+}
+
 void Application::RenderLog()
 {
 	ImGui::Begin("Log");
@@ -389,21 +413,20 @@ void Application::RenderLog()
 #endif
 		ImGui::Checkbox("Info", &_logIncludeInfo);
 		ImGui::SameLine();
-		
+
 		ImGui::Checkbox("Warnings", &_logIncludeWarn);
 		ImGui::SameLine();
 
 		ImGui::Checkbox("Error", &_logIncludeError);
 
+		ImGui::BeginChild("TableScrollingRegion", ImVec2(0, 0), false);
 		for (size_t i = 0; i < _log.size(); ++i)
 		{
-#ifdef DEBUG
 			if (_log[i].second == LogLevel::Debug && _logIncludeDebug)
 			{
-				ImGui::Text(_log[i].first.c_str());				
+				ImGui::Text(_log[i].first.c_str());
 			}
-#endif
-			if (_log[i].second == LogLevel::Info && _logIncludeInfo)
+			else if (_log[i].second == LogLevel::Info && _logIncludeInfo)
 			{
 				ImGui::Text(_log[i].first.c_str());
 			}
@@ -419,7 +442,9 @@ void Application::RenderLog()
 				ImGui::Text(_log[i].first.c_str());
 				ImGui::PopStyleColor();
 			}
+			ImGui::SetScrollHereY(1.0f);
 		}
+		ImGui::EndChild();
 	}
 	ImGui::End();
 }

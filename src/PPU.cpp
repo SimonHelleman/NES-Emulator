@@ -65,20 +65,27 @@ void PPU::WriteOAMData(uint8_t val)
 void PPU::WriteScroll(uint8_t val)
 {
 	uint16_t val16 = val;
-	_regAddr |= _addressLatch ? val : val16 << 8;
+
+    _regScroll &= _regScroll ? 0xff00 : 0x00ff;
+	_regScroll |= _addressLatch ? val : val16 << 8;
 	_addressLatch = !_addressLatch;
 }
 
 void PPU::WriteAddress(uint8_t val)
 {
 	uint16_t val16 = val;
+
+    // Clear the existing low/high bits
+    _regAddr &= _addressLatch ? 0xff00 : 0x00ff;
+
+    // Set the low/high bits;
 	_regAddr |= _addressLatch ? val : val16 << 8;
 	_addressLatch = !_addressLatch;
 }
 
 void PPU::WriteData(uint8_t val)
 {
-    LOG_DEBUG_FL("[PPU] Writing " + Int8HexString(val) + " to " + Int16HexString(_regAddr));
+    LOG_DEBUG("[PPU] Writing " + Int8HexString(val) + " to " + Int16HexString(_regAddr));
 	_memory.Write(_regAddr, val);
 	_regAddr += (_regControl & CONTROL_I) ? 32 : 1;
 }
