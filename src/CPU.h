@@ -88,6 +88,8 @@ private:
 	void HandleIRQ();
 	void HandleNMI();
 
+	void AddToDisassembly();
+
 // CPU instructions
 private:
 

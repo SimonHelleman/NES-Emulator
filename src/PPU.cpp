@@ -4,16 +4,35 @@
 
 void PPU::Clock()
 {
+    //INFO(std::string("ppu_clock ") + std::to_string(_scanline));
     _frameComplete = false;
-    if (_scanline < 240 && _cycles < 256 && _cycles > 0)
-    {
 
+    // Reset for next frame
+    if (_scanline == -1 && _cycles == 0)
+    {
+        _regStatus &= ~STATUS_V;
     }
 
-    if (++_cycles >= CYCLES_PER_SCANLINE)
+    if (_scanline == VISIBLE_SCANLINES + 1)
+    {
+        //INFO(std::to_string(_cycles));
+    }
+
+    // vertical blank start
+    if (_scanline == VISIBLE_SCANLINES + 1 && _cycles == 0)
+    {
+        //INFO("vblank_start");
+        _regStatus |= STATUS_V;
+        if (_regControl & CONTROL_V)
+        {
+            _doNMI = true;
+        }
+    }
+
+    if (++_cycles > CYCLES_PER_SCANLINE)
     {
         _cycles = 0;
-        if (++_scanline >= SCANLINES_PER_FRAME)
+        if (++_scanline > SCANLINES_PER_FRAME)
         {
             _scanline = -1;
             _frameComplete = true;
@@ -42,7 +61,7 @@ uint8_t PPU::ReadStatus(bool silent)
     }
 
     // Hack to keep code running until renderer is implemented
-    _regStatus |= STATUS_V;
+    // _regStatus |= STATUS_V;
 
 	return val;
 }

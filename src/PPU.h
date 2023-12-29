@@ -23,7 +23,7 @@ public:
 
 public:
 	PPU(PPUMemoryMap& memory)
-		: _memory(memory), _framebuffer(256, 240)
+		: _memory(memory), _framebuffer(VISIBLE_PIXELS, VISIBLE_SCANLINES)
 	{
 	}
 
@@ -37,6 +37,16 @@ public:
 	bool IsFrameComplete()
 	{
 		return _frameComplete;
+	}
+
+	bool PendingNMI()
+	{
+		return _doNMI;
+	}
+
+	void ClearNMI()
+	{
+		_doNMI = false;
 	}
 
 	void WriteControl(uint8_t val);
@@ -87,6 +97,7 @@ private:
 
 	int _cycles = 0;
 	int _scanline = 0;
+	bool _doNMI = false;
 	bool _frameComplete = false;
 
 	
@@ -123,6 +134,8 @@ public:
 	static constexpr uint8_t STATUS_S = 0b01000000;
 	static constexpr uint8_t STATUS_O = 0b00100000;
 
+	static constexpr int VISIBLE_SCANLINES = 240;
+	static constexpr int VISIBLE_PIXELS = 256;
 	static constexpr int CYCLES_PER_SCANLINE = 341;
 	static constexpr int SCANLINES_PER_FRAME = 261;
 };

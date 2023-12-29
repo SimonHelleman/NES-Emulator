@@ -113,5 +113,11 @@ void System::SystemClock()
 		_haltedBreakpoint = false;
 		_cpu->Clock();
 	}
+
+	if (_ppu->PendingNMI())
+	{
+		_cpu->NMI();
+		_ppu->ClearNMI();
+	}
 }
 

@@ -4,21 +4,32 @@ void CPU::Clock()
 {
 	if (_currentState == State::Fetch)
 	{
-		_isInstFinished = false;
-		
+		FetchInstruction();
+		_currentState = State::AddressingMode;
+
 		if (_doIRQ)
 		{
-			HandleIRQ();
+			_currentInstruction.clockCycles += 7;	
 		}
-		else if (_doNMI)
+		
+		if (_doNMI)
 		{
-			HandleNMI();
+			_currentInstruction.clockCycles += 8;
 		}
-		else
+
+		// At this point the inturrupt is completely
+		// set up. So clear the flag
+		if (_doIRQ && _isInstFinished)
 		{
-			FetchInstruction();
-			_currentState = State::AddressingMode;
+			_doIRQ = false;
 		}
+		
+		if (_doNMI && _isInstFinished)
+		{
+			_doNMI = false;
+		}
+
+		_isInstFinished = false;
 	}
 
 	if (_currentState == State::AddressingMode)
@@ -39,16 +50,12 @@ void CPU::Clock()
 		_currentState = State::Fetch;
 		_isInstFinished = true;
 
-		if (_doIRQ)
+		if (_doNMI)
 		{
-			_doIRQ = false;
+			HandleNMI();
 		}
 
-		if (_disassembler != nullptr)
-		{
-			Opcode next = _opcodeMatrix[_memory.Read(_regPC, true)];
-			_disassembler->AddInstruction(_regPC, next.mnemonic, next.size, next.addrMode);
-		}
+		AddToDisassembly();
 	}
 }
 
@@ -75,20 +82,27 @@ void CPU::Reset()
 	_regPC = _currentAddr;
 	_currentState = State::Fetch;
 
-	if (_disassembler != nullptr)
-	{
-		Opcode inst = _opcodeMatrix[_memory.Read(_regPC)];
-		_disassembler->AddInstruction(_regPC, inst.mnemonic, inst.size, inst.addrMode);
-	}
+	AddToDisassembly();
 }
 
 void CPU::IRQ()
 {
 	_doIRQ = !(_regStatus | STATUS_I);
+
+	if (_isInstFinished)
+	{
+		HandleIRQ();
+		AddToDisassembly();
+	}
 }
 
 void CPU::NMI()
 {
+	if (_isInstFinished)
+	{
+		HandleNMI();
+		AddToDisassembly();
+	}
 	_doNMI = true;
 }
 
@@ -103,10 +117,7 @@ void CPU::HandleIRQ()
 	_regPC = IRQ_VECTOR;
 	Absolute();
 	_regPC = _currentAddr;
-		
-	FetchInstruction();
-	_currentInstruction.clockCycles += 7;
-	_currentState = State::AddressingMode;
+	
 }
 
 void CPU::HandleNMI()
@@ -120,10 +131,15 @@ void CPU::HandleNMI()
 	_regPC = NMI_VECTOR;
 	Absolute();
 	_regPC = _currentAddr;
+}
 
-	FetchInstruction();
-	_currentInstruction.clockCycles += 8;
-	_currentState = State::AddressingMode;
+void CPU::AddToDisassembly()
+{
+	if (_disassembler != nullptr)
+	{
+		Opcode inst = _opcodeMatrix[_memory.Read(_regPC, true)];
+		_disassembler->AddInstruction(_regPC, inst.mnemonic, inst.size, inst.addrMode);
+	}
 }
 
 void CPU::BRK()
