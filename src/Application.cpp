@@ -107,8 +107,8 @@ void Application::Run()
 	_system.EnableBreakpoints(true);
 	while (!glfwWindowShouldClose(_window))
 	{
-		for (size_t i = 0; i < 50; ++i)
-		//for (size_t i = 0; i < 200; ++i)
+		//for (size_t i = 0; i < 50; ++i)
+		for (size_t i = 0; i < 200; ++i)
 		{
 			_system.Update();
 			_systemRun = _system.IsRunning();

@@ -42,8 +42,10 @@ void CPU::Clock()
 	{
 		if (_currentInstruction.clockCycles > 0)
 		{
-			--_currentInstruction.clockCycles;
-			return;
+			if (--_currentInstruction.clockCycles != 0)
+			{
+				return;
+			}
 		}
 
 		_currentInstruction.operation(this);
