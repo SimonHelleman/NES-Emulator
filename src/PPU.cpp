@@ -1,5 +1,5 @@
 #include <cassert>
-#include "logger.h"
+#include "Logger.h"
 #include "PPU.h"
 
 void PPU::Clock()
@@ -36,6 +36,15 @@ void PPU::Clock()
         {
             _scanline = -1;
             _frameComplete = true;
+            // This is the chief of all hacks but, it enables me to get a fancy screenshot
+            // for the github
+            for (int y = 0; y < 30; ++y)
+            {
+                for (int x = 0; x < 32; ++x)
+                {
+                    _framebuffer.Copy(GetTile(0, _memory.Read(0x2400 + (y * 32) + x), GetPalette(0)), 8 * x, 8 * y);
+                }
+            }
         }
     }
 }
@@ -141,14 +150,14 @@ PPU::Palette PPU::GetPalette(int paletteIndex)
 }
 
 
-Image PPU::GetTile(uint8_t index, const Palette& palette)
+Image PPU::GetTile(int table, uint8_t index, const Palette& palette)
 {
     Image tile = Image(8, 8);
-    uint16_t startAddr = 16 * index;
+    uint16_t startAddr = 16 * index + (table * 4096);
 
     uint8_t tileData[2][8];
 
-    size_t offset = 0;
+    uint8_t offset = 0;
     for (int i = 0; i < 2; ++i)
     {
         for (int j = 0; j < 8; ++j)
@@ -157,9 +166,9 @@ Image PPU::GetTile(uint8_t index, const Palette& palette)
         }
     }
 
-    for (int y = 0; y < tile.Height(); ++y)
+    for (unsigned int y = 0; y < tile.Height(); ++y)
     {
-        for (int x = 0; x < tile.Width(); ++x)
+        for (unsigned int x = 0; x < tile.Width(); ++x)
         {
             uint8_t msb = (tileData[1][y] >> (7 - x)) & 0b00000001;
             uint8_t lsb = (tileData[0][y] >> (7 - x)) & 0b00000001;
@@ -182,7 +191,7 @@ Image PPU::GetPatternTable(int table, const Palette& palette)
 
     uint16_t tableStart = table * 4096;
 
-    for (size_t tile = 0; tile < 256; ++tile)
+    for (uint16_t tile = 0; tile < 256; ++tile)
     {
         uint16_t tileStart = tableStart + 16 * tile;
         uint8_t tileData[2][8];

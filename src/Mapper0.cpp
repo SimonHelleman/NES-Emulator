@@ -71,15 +71,25 @@ uint8_t PPUMapper0::Read(uint16_t addr, bool silent) const
 		return _chrROM[addr];
 	}
 
-	if (addr >= 0x2000 && addr <= 0x3eff)
-	// Nametables
+	if (addr < 0x2800 && _mirroringMode == NametableMirroring::Horizontal)
 	{
-		return 0;
+		return _nametableRAM[addr % NAMETABLE_SIZE];
+	}
+
+	if (addr >= 0x2800 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Horizontal)
+	{
+		uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
+		return _nametableRAM[index];
+	}
+
+	if (addr >= 0x2000 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Vertical)
+	{
+		return _nametableRAM[addr % NAMETABLE_RAM_SIZE];
 	}
 
 	if (addr >= 0x3f00 && addr <= 0x3fff)
 	{
-		return _palletRAM[addr % 32];
+		return _palletRAM[addr % PALLET_RAM_SIZE];
 	}
 	
 	if (!silent)
@@ -97,8 +107,22 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 		return;
 	}
 
-	if (addr >= 0x2000 && addr <= 0x2fff)
+	if (addr < 0x2800 && _mirroringMode == NametableMirroring::Horizontal)
 	{
+		_nametableRAM[addr % NAMETABLE_SIZE] = data;
+		return;
+	}
+
+	if (addr >= 0x2800 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Horizontal)
+	{
+		uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
+		_nametableRAM[index] = data;
+		return;
+	}
+
+	if (addr >= 0x2000 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Vertical)
+	{
+		_nametableRAM[addr % NAMETABLE_RAM_SIZE] = data;
 		return;
 	}
 
@@ -110,7 +134,7 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 			WARN("[MAP0_PPU] Palette index written falls outside of bounds! Write ignored.")
 			return;
 		}
-		_palletRAM[addr % 32] = data;
+		_palletRAM[addr % PALLET_RAM_SIZE] = data;
 		return;
 	}
 

@@ -62,7 +62,7 @@ public:
 	
 	Palette GetPalette(int paletteIndex);
 
-	Image GetTile(uint8_t index, const Palette& palette);
+	Image GetTile(int table, uint8_t index, const Palette& palette);
 	Image GetPatternTable(int table, const Palette& palette);
 
 	uint16_t AddressReg()

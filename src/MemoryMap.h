@@ -37,19 +37,24 @@ class PPUMemoryMap : public MemoryMap
 {
 public:
 	PPUMemoryMap(const std::unique_ptr<uint8_t[]>& chrROM, NametableMirroring mirroring)
-		: _chrROM(chrROM), _nametableRAM(std::make_unique<uint8_t[]>(2048)),
-		_palletRAM(std::make_unique<uint8_t[]>(32)), _mirroringMode(mirroring)
+		: _chrROM(chrROM), _nametableRAM(std::make_unique<uint8_t[]>(NAMETABLE_RAM_SIZE)),
+		_palletRAM(), _mirroringMode(mirroring)
 	{
-		for (size_t i = 0; i < 32; ++i)
+		for (size_t i = 0; i < PALLET_RAM_SIZE; ++i)
 		{
 			_palletRAM[i] = 0;
 		}
 	}
 
+public:
+	static constexpr size_t PALLET_RAM_SIZE = 32;
+	static constexpr size_t NAMETABLE_SIZE = 1024;
+	static constexpr size_t NAMETABLE_RAM_SIZE = NAMETABLE_SIZE * 2;
+
 protected:
 	const std::unique_ptr<uint8_t[]>& _chrROM;
 	std::unique_ptr<uint8_t[]> _nametableRAM;
-	std::unique_ptr<uint8_t[]> _palletRAM;
+	uint8_t _palletRAM[PALLET_RAM_SIZE];
 
 	NametableMirroring _mirroringMode;
 };
