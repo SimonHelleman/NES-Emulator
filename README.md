@@ -10,7 +10,7 @@ Progress so far:
 4. Basic GUI
 5. Pattern table and palette displays
 
-![screenshot](Screenshots/2023-09-11.png)
+![screenshot](Screenshots/2024-01-02.png)
 
 # Building
 This project uses [Premake](https://premake.github.io/download) to generate build files. You will need to download an executable for your platform and add it to your PATH environment variable.
