@@ -20,7 +20,7 @@ project "NES-Emulator"
     
     filter { "system:windows", "action:gmake2" }
         libdirs { "Dependencies/GLFW/win64/lib-mingw-w64" }
-        links { "glfw3", "gdi32", "opengl32" }
+        links { "glfw3", "gdi32", "opengl32", "comdlg32" }
 		
 	filter { "system:linux" }
 		links { "glfw", "GL" }
