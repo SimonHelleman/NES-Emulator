@@ -11,7 +11,7 @@ class System
 {
 public:
 
-	System(const Cartridge& cart);
+	System(Cartridge& cart);
 	~System();
 
 	System(const System&) = delete;
@@ -39,6 +39,8 @@ public:
 	{
 		return _cycleCount;
 	}
+
+	void ChangeCartridge(Cartridge& cart);
 
 	void Reset();
 
@@ -82,9 +84,9 @@ private:
 	void SystemClock();
 
 private:
-	const Cartridge& _cart;
+	Cartridge& _cart;
 
-	MemoryMap* _memoryCPU;
+	CPUMemoryMap* _memoryCPU;
 	Disassembler* _disassembler;
 	CPU* _cpu;
 	std::set<uint16_t> _breakpoints;
@@ -92,6 +94,7 @@ private:
 	PPUMemoryMap* _memoryPPU;
 	PPU* _ppu;
 
+	int _mapper = 0;
 	bool _continuousRun = false;
 	bool _enableBreakpoints = false;
 	bool _haltedBreakpoint = false;

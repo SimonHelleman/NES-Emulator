@@ -1,11 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <memory>
+#include <string>
 #include "NametableMirroring.h"
 
 class Cartridge
 {
 public:
+	Cartridge();
 	Cartridge(const char* filePath);
 
 	size_t ProgramROMSize() const
@@ -18,12 +20,12 @@ public:
 		return _characterROMSize;
 	}
 	
-	const std::unique_ptr<uint8_t[]>& ProgramROM() const
+	const std::shared_ptr<uint8_t[]> ProgramROM() const
 	{
 		return _programROM;
 	}
 
-	const std::unique_ptr<uint8_t[]>& CharacterROM() const
+	const std::shared_ptr<uint8_t[]> CharacterROM() const
 	{
 		return _characterROM;
 	}
@@ -36,6 +38,11 @@ public:
 	NametableMirroring MirroringMode() const
 	{
 		return _mirroringMode;
+	}
+
+	std::string Name()
+	{
+		return _name;
 	}
 
 private:
@@ -56,11 +63,12 @@ private:
 	static constexpr size_t CHARACTER_ROM_UNIT = 8192;
 
 private:
-	int _mapper;
-	NametableMirroring _mirroringMode;
-	size_t _programROMSize;
-	size_t _characterROMSize;
-	std::unique_ptr<uint8_t[]> _programROM;
-	std::unique_ptr<uint8_t[]> _characterROM;
+	std::string _name = "default";
+	int _mapper = 0;
+	NametableMirroring _mirroringMode = NametableMirroring::Vertical;
+	size_t _programROMSize = PROGRAM_ROM_UNIT;
+	size_t _characterROMSize = CHARACTER_ROM_UNIT;
+	std::shared_ptr<uint8_t[]> _programROM = std::make_unique<uint8_t[]>(PROGRAM_ROM_UNIT);
+	std::shared_ptr<uint8_t[]> _characterROM = std::make_unique<uint8_t[]>(CHARACTER_ROM_UNIT);
 };
 

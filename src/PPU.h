@@ -29,6 +29,11 @@ public:
 
 	void Clock();
 
+	void Reset()
+	{
+		_addressLatch = false;
+	}
+
 	const Image& GetFramebuffer()
 	{
 		return _framebuffer;

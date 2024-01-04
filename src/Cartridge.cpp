@@ -1,20 +1,37 @@
-#include <iostream>
+#include <cstring>
 #include <fstream>
+#include "Logger.h"
 #include "Cartridge.h"
+
+Cartridge::Cartridge()
+{
+	memset(_programROM.get(), 0xea, _programROMSize);
+}
 
 Cartridge::Cartridge(const char* filePath)
 {
+	_name = std::string(filePath);
+	_name = _name.substr(_name.find_last_of("\\/") + 1);
+
 	Header header;
 
 	std::ifstream file(filePath, std::ios::binary);
 
 	if (!file.is_open())
 	{
-		std::cerr << "Error opening file: " << filePath << '\n';
+		ERROR(std::string("[CART]Error opening file: ") + _name);
+		memset(_programROM.get(), 0xea, _programROMSize);
 		return;
 	}
 
 	file.read(reinterpret_cast<char*>(&header), sizeof(Header));
+
+	if (header.name[0] != 'N' || header.name[1] != 'E' || header.name[2] != 'S')
+	{
+		ERROR(std::string("[CART]") + _name + " is not a valid iNES file");
+		memset(_programROM.get(), 0xea, _programROMSize);
+		return;
+	}
 
 	if (header.flags06 & 0b00000100) // skip trainer information
 	{

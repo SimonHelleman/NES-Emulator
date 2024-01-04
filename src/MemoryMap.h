@@ -20,9 +20,16 @@ public:
 class CPUMemoryMap : public MemoryMap
 {
 public:
-	CPUMemoryMap(PPU* ppu)
-		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _ppu(ppu)
+	CPUMemoryMap(PPU* ppu, std::shared_ptr<uint8_t[]> programROM, size_t programROMSize)
+		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _ppu(ppu), 
+		_programROM(programROM), _programROMSize(programROMSize)
 	{
+	}
+
+	void SetProgramROM(std::shared_ptr<uint8_t[]> programROM, size_t programROMSize)
+	{
+		_programROM = programROM;
+		_programROMSize = programROMSize;
 	}
 
 public:
@@ -31,12 +38,14 @@ public:
 protected:
 	std::unique_ptr<uint8_t[]> _ram;
 	PPU* _ppu;
+	std::shared_ptr<uint8_t[]> _programROM;
+	size_t _programROMSize;
 };
 
 class PPUMemoryMap : public MemoryMap
 {
 public:
-	PPUMemoryMap(const std::unique_ptr<uint8_t[]>& chrROM, NametableMirroring mirroring)
+	PPUMemoryMap(std::shared_ptr<uint8_t[]> chrROM, NametableMirroring mirroring)
 		: _chrROM(chrROM), _nametableRAM(std::make_unique<uint8_t[]>(NAMETABLE_RAM_SIZE)),
 		_palletRAM(), _mirroringMode(mirroring)
 	{
@@ -46,13 +55,23 @@ public:
 		}
 	}
 
+	void SetCharacterROM(std::shared_ptr<uint8_t[]> chrROM)
+	{
+		_chrROM = chrROM;
+	}
+
+	void SetMirroringMode(NametableMirroring mirroring)
+	{
+		_mirroringMode = mirroring;
+	}
+
 public:
 	static constexpr size_t PALLET_RAM_SIZE = 32;
 	static constexpr size_t NAMETABLE_SIZE = 1024;
 	static constexpr size_t NAMETABLE_RAM_SIZE = NAMETABLE_SIZE * 2;
 
 protected:
-	const std::unique_ptr<uint8_t[]>& _chrROM;
+	std::shared_ptr<uint8_t[]> _chrROM;
 	std::unique_ptr<uint8_t[]> _nametableRAM;
 	uint8_t _palletRAM[PALLET_RAM_SIZE];
 

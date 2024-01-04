@@ -13,6 +13,9 @@
 class Application
 {
 public:
+
+	friend class FileDialogs;
+
 	static Application& Get()
 	{
 		static Application app;
@@ -20,6 +23,8 @@ public:
 	}
 
 	void Run();
+
+	void SetCartridge(const char* filepath);
 
 private:
 	void RenderUI();
@@ -29,6 +34,7 @@ private:
 	void RenderDisassembly();
 	void RenderControl();
 	void RenderBreakpoints();
+	void RenderCartridge();
 	void RenderCPURegisters();
 	void RenderPPURegisters();
 	void RenderLog();
@@ -81,6 +87,8 @@ private:
 	char _breakpointText[8];
 	bool _enableBreakpoints = true;
 
+	char path[256] = { 0 };
+
 	bool _systemRun = false;
 
 
@@ -91,5 +99,7 @@ private:
 	bool _logIncludeError = true;
 
 	std::vector<std::pair<std::string, LogLevel>> _log;
+
+	
 };
 

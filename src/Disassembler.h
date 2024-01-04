@@ -54,6 +54,12 @@ public:
 		return _instructionCache;
 	}
 
+	void Clear()
+	{
+		_instructionCache.clear();
+		_disassembly.clear();
+	}
+
 	std::string GetLatestDissamblyLine() const
 	{
 		return GetDisassemblyLine(_latestInst);

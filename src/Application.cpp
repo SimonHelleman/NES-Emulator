@@ -5,10 +5,11 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
+#include "FileDialogs.h"
 #include "Application.h"
 
 Application::Application()
-	: _cart("nestest.nes"), _system(_cart)
+	: _cart(), _system(_cart)
 {
 	Logger& logger = Logger::Get();
 	logger.AddOutput(LogLevel::Debug | LogLevel::Info, Logger::StandardOutput);
@@ -97,11 +98,13 @@ Application::Application()
 			_paletteEntry[i].id[color] = buf;
 		}
 	}
-
 }
 
 void Application::Run()
 {
+	//std::string openPath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
+	//INFO(openPath);
+
 	uint16_t breakpoint = 0xc049;
 	_system.AddBreakpoint(breakpoint);
 	_system.EnableBreakpoints(true);
@@ -147,6 +150,11 @@ void Application::Run()
 	ImGui::DestroyContext();
 }
 
+void Application::SetCartridge(const char* filepath)
+{
+	_cart = Cartridge(filepath);
+	_system.ChangeCartridge(_cart);
+}
 
 void Application::RenderUI()
 {
@@ -165,7 +173,21 @@ void Application::RenderUI()
 	{
 		if (ImGui::Button("Write Disassembly"))
 		{
-			_system.GetDissembler()->WriteToFile("disassembly.s");
+			std::string path = "";
+
+			if (FileDialogs::Available())
+			{
+				path = FileDialogs::SaveFileDialog("Assembly Source (*.s)\0*.s\0");
+				if (!path.empty())
+				{
+					_system.GetDissembler()->WriteToFile(path.c_str());
+				}
+			}
+			else
+			{
+				_system.GetDissembler()->WriteToFile("disassembly.s");
+			}
+
 		}
 	}
 	ImGui::End();
@@ -175,6 +197,7 @@ void Application::RenderUI()
 	RenderDisassembly();
 	RenderControl();
 	RenderBreakpoints();
+	RenderCartridge();
 	RenderCPURegisters();
 	RenderPPURegisters();
 	RenderLog();
@@ -352,6 +375,40 @@ void Application::RenderBreakpoints()
 				break; // Sneaky break. A tad hacky but it works
 			}
 		}
+	}
+	ImGui::End();
+}
+
+void Application::RenderCartridge()
+{
+	ImGui::Begin("Cartridge");
+	{
+		if (FileDialogs::Available())
+		{
+			if (ImGui::Button("Open ROM"))
+			{
+				std::string filepath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
+				if (!filepath.empty())
+				{
+					_cart = Cartridge(filepath.c_str());
+					_system.ChangeCartridge(_cart);
+				}
+			}
+		}
+		else // "Peasant" mode
+		{
+			ImGui::InputText("path", path, 256);
+			ImGui::SameLine();
+			if (ImGui::Button("Open ROM"))
+			{
+				//LOG_DEBUG(path);
+				_cart = Cartridge(path);
+				_system.ChangeCartridge(_cart);
+			}
+		}
+
+		ImGui::SameLine();
+		ImGui::Text("%s", _cart.Name().c_str());
 	}
 	ImGui::End();
 }

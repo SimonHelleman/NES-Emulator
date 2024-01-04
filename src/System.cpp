@@ -1,14 +1,14 @@
 #include "System.h"
 
-System::System(const Cartridge& cart)
+System::System(Cartridge& cart)
 	: _cart(cart)
 {
-	switch (_cart.Mapper())
+	_mapper = _cart.Mapper();
+	switch (_mapper)
 	{
 	case 0:
 		_memoryPPU = new PPUMapper0(_cart.CharacterROM(), _cart.MirroringMode());
 		_ppu = new PPU(*_memoryPPU);
-
 		_memoryCPU = new CPUMapper0(_ppu, _cart.ProgramROM(), _cart.ProgramROMSize());
 		_disassembler = new Disassembler(*_memoryCPU);
 		_cpu = new CPU(*_memoryCPU, _disassembler);
@@ -24,9 +24,23 @@ System::~System()
 	delete _ppu;
 }
 
+void System::ChangeCartridge(Cartridge& cart)
+{
+	_cart = cart;
+	if (_cart.Mapper() == _mapper)
+	{
+		_memoryCPU->SetProgramROM(cart.ProgramROM(), cart.ProgramROMSize());
+		_memoryPPU->SetCharacterROM(cart.CharacterROM());
+		_memoryPPU->SetMirroringMode(cart.MirroringMode());
+	}
+	Reset();
+}
+
 void System::Reset()
 {
+	_disassembler->Clear();
 	_cpu->Reset();
+	_ppu->Reset();
 }
 
 void System::Update()
