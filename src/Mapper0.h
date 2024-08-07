@@ -6,8 +6,10 @@ class CPUMapper0 : public CPUMemoryMap
 {
 public:
 
-	CPUMapper0(PPU* ppu, const std::shared_ptr<uint8_t[]> programROM, size_t programROMSize)
-		: CPUMemoryMap(ppu, programROM, programROMSize)
+	CPUMapper0(PPU* ppu, IOPort& outPort, IOPort& inPort0, IOPort& inPort1,
+		std::shared_ptr<uint8_t[]> programROM, size_t programROMSize
+	)
+		: CPUMemoryMap(ppu, outPort, inPort0, inPort1, programROM, programROMSize)
 	{
 	}
 

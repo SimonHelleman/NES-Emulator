@@ -11,6 +11,9 @@ uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 		if (addr == 0x2004) return _ppu->ReadOAMData();
 		if (addr == 0x2007) return _ppu->ReadData();
 	}
+	
+	if (addr == 0x4016) return _inPort0.Get();
+	if (addr == 0x4017) return _inPort1.Get();
 
 	// Not yet implemented... supress unmapped warning for now
 	if (addr >= 0x4000 && addr <= 0x4017)
@@ -20,8 +23,8 @@ uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 
 	if (addr >= 0x8000)
 	{
-		bool is32K = _programROMSize == PRG_ROM32K;
-		uint16_t index = is32K ? addr % 0x8000 : (addr % 0x8000) % PRG_ROM16K;
+		const bool is32K = _programROMSize == PRG_ROM32K;
+		const uint16_t index = is32K ? addr % 0x8000 : (addr % 0x8000) % PRG_ROM16K;
 		//uint16_t index = addr & (_is32K ? PRG_ROM32K - 1 : PRG_ROM16K - 1);
 		return _programROM[index];
 	}
@@ -55,6 +58,8 @@ void CPUMapper0::Write(uint16_t addr, uint8_t data)
 		return;
 	}
 
+	if (addr == 0x4016) _outPort.Set(data);
+
 	// APU stuff.. Not today...
 	if (addr >= 0x4000 && addr <= 0x4017)
 	{
@@ -78,7 +83,7 @@ uint8_t PPUMapper0::Read(uint16_t addr, bool silent) const
 
 	if (addr >= 0x2800 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Horizontal)
 	{
-		uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
+		const uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
 		return _nametableRAM[index];
 	}
 
@@ -115,7 +120,7 @@ void PPUMapper0::Write(uint16_t addr, uint8_t data)
 
 	if (addr >= 0x2800 && addr <= 0x2fff && _mirroringMode == NametableMirroring::Horizontal)
 	{
-		uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
+		const uint16_t index = (addr % NAMETABLE_SIZE) + NAMETABLE_SIZE;
 		_nametableRAM[index] = data;
 		return;
 	}

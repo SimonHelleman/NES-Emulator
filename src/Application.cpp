@@ -105,8 +105,6 @@ void Application::Run()
 	//std::string openPath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
 	//INFO(openPath);
 
-	uint16_t breakpoint = 0xc049;
-	_system.AddBreakpoint(breakpoint);
 	_system.EnableBreakpoints(true);
 	while (!glfwWindowShouldClose(_window))
 	{
@@ -161,6 +159,10 @@ void Application::RenderUI()
 	RenderHexdump(_system.CPUMemory(), "CPU Hexdump", &_hexdumpPageCPU);
 	RenderHexdump(_system.PPUMemory(), "PPU Hexdump", &_hexdumpPagePPU);
 
+	RenderIOPort(_system.GetOutputPort(), "IO Port: OUT");
+	RenderIOPort(_system.GetInputPort(0), "IO Port: IN0");
+	RenderIOPort(_system.GetInputPort(1), "IO Port: IN1");
+
 	ImGui::Begin("PPU Framebuffer");
 	{
 		const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
@@ -173,7 +175,7 @@ void Application::RenderUI()
 	{
 		if (ImGui::Button("Write Disassembly"))
 		{
-			std::string path = "";
+			std::string path;
 
 			if (FileDialogs::Available())
 			{
@@ -229,6 +231,31 @@ void Application::RenderHexdump(const MemoryMap* memory, const char* title, int*
 			ImGui::EndTable();
 		}
 		ImGui::PopStyleVar();
+	}
+	ImGui::End();
+}
+
+void Application::RenderIOPort(const IOPort* port, const char* title)
+{
+	ImGui::Begin(title);
+	{
+		const char* directionText = port->Direction() == PortDirection::Input ? 
+			"Direction: Input" : "Direction: Output";
+		
+		ImGui::Text(directionText);
+
+		char bits[12];
+		bits[0] = '[';
+		const int numPins = port->Direction() == PortDirection::Input ? 5 : 3;
+		int i;
+		for (i = 1; i < numPins + 1; ++i)
+		{
+			bits[i] = port->GetPin(i - 1) ? 'H' : 'L';
+		}
+		bits[i++] = ']';
+		bits[i] = '\0';
+
+		ImGui::Text(bits);
 	}
 	ImGui::End();
 }
@@ -397,12 +424,12 @@ void Application::RenderCartridge()
 		}
 		else // "Peasant" mode
 		{
-			ImGui::InputText("path", path, 256);
+			ImGui::InputText("path", _path, 256);
 			ImGui::SameLine();
 			if (ImGui::Button("Open ROM"))
 			{
 				//LOG_DEBUG(path);
-				_cart = Cartridge(path);
+				_cart = Cartridge(_path);
 				_system.ChangeCartridge(_cart);
 			}
 		}
@@ -482,21 +509,21 @@ void Application::RenderLog()
 		ImGui::BeginChild("TableScrollingRegion", ImVec2(0, 0), false);
 		for (size_t i = 0; i < _log.size(); ++i)
 		{
-			if (_log[i].second == LogLevel::Debug && _logIncludeDebug)
+			if (_log[i].second & LogLevel::Debug && _logIncludeDebug)
 			{
 				ImGui::Text(_log[i].first.c_str());
 			}
-			else if (_log[i].second == LogLevel::Info && _logIncludeInfo)
+			else if (_log[i].second & LogLevel::Info && _logIncludeInfo)
 			{
 				ImGui::Text(_log[i].first.c_str());
 			}
-			else if (_log[i].second == LogLevel::Warning && _logIncludeWarn)
+			else if (_log[i].second & LogLevel::Warning && _logIncludeWarn)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.647f, 0.0f, 1.0f));
 				ImGui::Text(_log[i].first.c_str());
 				ImGui::PopStyleColor();
 			}
-			else if (_log[i].second == LogLevel::Error && _logIncludeError)
+			else if (_log[i].second & LogLevel::Error && _logIncludeError)
 			{
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 				ImGui::Text(_log[i].first.c_str());

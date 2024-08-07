@@ -9,10 +9,18 @@ System::System(Cartridge& cart)
 	case 0:
 		_memoryPPU = new PPUMapper0(_cart.CharacterROM(), _cart.MirroringMode());
 		_ppu = new PPU(*_memoryPPU);
-		_memoryCPU = new CPUMapper0(_ppu, _cart.ProgramROM(), _cart.ProgramROMSize());
+		_memoryCPU = new CPUMapper0(
+			_ppu,
+			_outputPort, _inputPort[0], _inputPort[1],
+			_cart.ProgramROM(), _cart.ProgramROMSize()
+		);
 		_disassembler = new Disassembler(*_memoryCPU);
 		_cpu = new CPU(*_memoryCPU, _disassembler);
 	}
+
+	_outputPort.Set(0b101);
+	_inputPort[0].Set(0b10101);
+	_inputPort[1].Set(0b01010);
 }
 
 System::~System()
@@ -59,6 +67,8 @@ void System::Update()
 				}
 			}
 		}
+
+
 		SystemClock();
 	}
 }

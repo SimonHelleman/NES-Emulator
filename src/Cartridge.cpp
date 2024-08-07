@@ -6,21 +6,24 @@
 Cartridge::Cartridge()
 {
 	memset(_programROM.get(), 0xea, _programROMSize);
+	_programROM[(0xeaeb % 0x8000) % PROGRAM_ROM_UNIT] = 0x4c;
 }
 
 Cartridge::Cartridge(const char* filePath)
 {
+	memset(_programROM.get(), 0xea, _programROMSize);
+	_programROM[(0xeaeb % 0x8000) % PROGRAM_ROM_UNIT] = 0x4c;
+
 	_name = std::string(filePath);
 	_name = _name.substr(_name.find_last_of("\\/") + 1);
 
-	Header header;
+	Header header{};
 
 	std::ifstream file(filePath, std::ios::binary);
 
 	if (!file.is_open())
 	{
 		ERROR(std::string("[CART]Error opening file: ") + _name);
-		memset(_programROM.get(), 0xea, _programROMSize);
 		return;
 	}
 
@@ -29,7 +32,6 @@ Cartridge::Cartridge(const char* filePath)
 	if (header.name[0] != 'N' || header.name[1] != 'E' || header.name[2] != 'S')
 	{
 		ERROR(std::string("[CART]") + _name + " is not a valid iNES file");
-		memset(_programROM.get(), 0xea, _programROMSize);
 		return;
 	}
 

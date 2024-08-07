@@ -6,6 +6,7 @@
 #include "Disassembler.h"
 #include "CPU.h"
 #include "PPU.h"
+#include "IOPort.h"
 
 class System
 {
@@ -38,6 +39,18 @@ public:
 	uint64_t CycleCount() const
 	{
 		return _cycleCount;
+	}
+
+	const IOPort* GetOutputPort()
+	{
+		return &_outputPort;
+	}
+
+	// maybe make these const ref and throw except instead of nullptr
+	const IOPort* GetInputPort(int port)
+	{
+		if (port > 1) return nullptr;
+		return &_inputPort[port];
 	}
 
 	void ChangeCartridge(Cartridge& cart);
@@ -86,13 +99,16 @@ private:
 private:
 	Cartridge& _cart;
 
-	CPUMemoryMap* _memoryCPU;
-	Disassembler* _disassembler;
-	CPU* _cpu;
+	CPUMemoryMap* _memoryCPU = nullptr;
+	Disassembler* _disassembler = nullptr;
+	CPU* _cpu = nullptr;
 	std::set<uint16_t> _breakpoints;
 
-	PPUMemoryMap* _memoryPPU;
-	PPU* _ppu;
+	PPUMemoryMap* _memoryPPU = nullptr;
+	PPU* _ppu = nullptr;
+
+	IOPort _outputPort = IOPort(PortDirection::Output);
+	IOPort _inputPort[2] = { IOPort(PortDirection::Input), IOPort(PortDirection::Input) };
 
 	int _mapper = 0;
 	bool _continuousRun = false;

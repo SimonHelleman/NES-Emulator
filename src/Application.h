@@ -28,7 +28,11 @@ public:
 
 private:
 	void RenderUI();
-	void RenderHexdump(const MemoryMap* memory, const char* title, int* page);
+	
+	// TODO: evaluate use of pointers oppssed to const ref
+	static void RenderHexdump(const MemoryMap* memory, const char* title, int* page);
+	static void RenderIOPort(const IOPort* port, const char* title);
+	
 	void RenderPatternTables();
 	void RenderPalettes();
 	void RenderDisassembly();
@@ -83,11 +87,10 @@ private:
 
 	Texture _framebufferTex;
 
-
 	char _breakpointText[8];
 	bool _enableBreakpoints = true;
 
-	char path[256] = { 0 };
+	char _path[256] = { 0 };
 
 	bool _systemRun = false;
 

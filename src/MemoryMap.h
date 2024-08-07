@@ -2,7 +2,9 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include "NametableMirroring.h"
+#include "IOPort.h"
 
 class PPU;
 
@@ -12,6 +14,8 @@ public:
 	virtual uint8_t Read(uint16_t addr, bool silent = false) const = 0;
 	virtual void Write(uint16_t addr, uint8_t data) = 0;
 
+	virtual ~MemoryMap() = default;
+
 	std::string HexDump();
 
 	static constexpr size_t ADRESSABLE_RANGE = 65536;
@@ -20,15 +24,18 @@ public:
 class CPUMemoryMap : public MemoryMap
 {
 public:
-	CPUMemoryMap(PPU* ppu, std::shared_ptr<uint8_t[]> programROM, size_t programROMSize)
-		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)), _ppu(ppu), 
-		_programROM(programROM), _programROMSize(programROMSize)
+	CPUMemoryMap(PPU* ppu, IOPort& outPort, IOPort& inPort0, IOPort& inPort1,
+		std::shared_ptr<uint8_t[]> programROM, size_t programROMSize
+	)
+		: _ram(std::make_unique<uint8_t[]>(RAM_SIZE)),
+		_programROM(std::move(programROM)), _programROMSize(programROMSize), _ppu(ppu),
+		_outPort(outPort), _inPort0(inPort0), _inPort1(inPort1)
 	{
 	}
 
 	void SetProgramROM(std::shared_ptr<uint8_t[]> programROM, size_t programROMSize)
 	{
-		_programROM = programROM;
+		_programROM = std::move(programROM);
 		_programROMSize = programROMSize;
 	}
 
@@ -37,16 +44,19 @@ public:
 
 protected:
 	std::unique_ptr<uint8_t[]> _ram;
-	PPU* _ppu;
 	std::shared_ptr<uint8_t[]> _programROM;
 	size_t _programROMSize;
+	PPU* _ppu;
+	IOPort& _outPort;
+	IOPort& _inPort0;
+	IOPort& _inPort1;
 };
 
 class PPUMemoryMap : public MemoryMap
 {
 public:
 	PPUMemoryMap(std::shared_ptr<uint8_t[]> chrROM, NametableMirroring mirroring)
-		: _chrROM(chrROM), _nametableRAM(std::make_unique<uint8_t[]>(NAMETABLE_RAM_SIZE)),
+		: _chrROM(std::move(chrROM)), _nametableRAM(std::make_unique<uint8_t[]>(NAMETABLE_RAM_SIZE)),
 		_palletRAM(), _mirroringMode(mirroring)
 	{
 		for (size_t i = 0; i < PALLET_RAM_SIZE; ++i)
