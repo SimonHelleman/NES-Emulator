@@ -18,9 +18,6 @@ System::System(Cartridge& cart)
 		_cpu = new CPU(*_memoryCPU, _disassembler);
 	}
 
-	_outputPort.Set(0b101);
-	_inputPort[0].Set(0b10101);
-	_inputPort[1].Set(0b01010);
 }
 
 System::~System()
@@ -53,6 +50,19 @@ void System::Reset()
 
 void System::Update()
 {
+	_joypad[0].SetStrobe(_outputPort.GetPin(0));
+	_joypad[1].SetStrobe(_outputPort.GetPin(0));
+
+	if (_inputPort[0].GetOE())
+	{
+		_joypad[0].FetchButton();
+	}
+
+	if (_inputPort[1].GetOE())
+	{
+		_joypad[1].FetchButton();
+	}
+
 	if (_continuousRun)
 	{
 		if (_enableBreakpoints)
@@ -67,7 +77,6 @@ void System::Update()
 				}
 			}
 		}
-
 
 		SystemClock();
 	}

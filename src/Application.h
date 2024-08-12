@@ -32,6 +32,7 @@ private:
 	// TODO: evaluate use of pointers oppssed to const ref
 	static void RenderHexdump(const MemoryMap* memory, const char* title, int* page);
 	static void RenderIOPort(const IOPort* port, const char* title);
+	static void RenderStdController(const StandardJoypad* controller, const char* title);
 	
 	void RenderPatternTables();
 	void RenderPalettes();

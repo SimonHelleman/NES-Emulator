@@ -78,6 +78,7 @@ Application::Application()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	_system.Reset();
+	_system.AddBreakpoint(0xc5d5);
 
 	const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
 	_framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
@@ -108,6 +109,16 @@ void Application::Run()
 	_system.EnableBreakpoints(true);
 	while (!glfwWindowShouldClose(_window))
 	{
+
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Start, glfwGetKey(_window, GLFW_KEY_ENTER));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Select, glfwGetKey(_window, GLFW_KEY_T));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::A, glfwGetKey(_window, GLFW_KEY_A));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::B, glfwGetKey(_window, GLFW_KEY_B));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Up, glfwGetKey(_window, GLFW_KEY_UP));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Down, glfwGetKey(_window, GLFW_KEY_DOWN));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Left, glfwGetKey(_window, GLFW_KEY_LEFT));
+		_system.GetJoypad(0)->SetButton(StandardJoypad::Button::Right, glfwGetKey(_window, GLFW_KEY_RIGHT));
+
 		//for (size_t i = 0; i < 50; ++i)
 		//for (size_t i = 0; i < 200; ++i)
 		// it turns out it takes ~90000 cycles per frame
@@ -162,6 +173,9 @@ void Application::RenderUI()
 	RenderIOPort(_system.GetOutputPort(), "IO Port: OUT");
 	RenderIOPort(_system.GetInputPort(0), "IO Port: IN0");
 	RenderIOPort(_system.GetInputPort(1), "IO Port: IN1");
+
+	RenderStdController(_system.GetJoypad(0), "JOY0");
+	RenderStdController(_system.GetJoypad(1), "JOY1");
 
 	ImGui::Begin("PPU Framebuffer");
 	{
@@ -256,6 +270,44 @@ void Application::RenderIOPort(const IOPort* port, const char* title)
 		bits[i] = '\0';
 
 		ImGui::Text(bits);
+		
+		if (port->Direction() == PortDirection::Input)
+		{
+			ImGui::Text("OE: %d", port->GetOE());
+		}
+	}
+	ImGui::End();
+}
+
+void Application::RenderStdController(const StandardJoypad* controller, const char* title)
+{
+	ImGui::Begin(title);
+	{
+		char bitsStr[12];
+		bitsStr[0] = '[';
+		bitsStr[1] = controller->IsButttonDown(StandardJoypad::Button::A) ? 'A' : '-';
+		bitsStr[2] = controller->IsButttonDown(StandardJoypad::Button::B) ? 'B' : '-';
+		bitsStr[3] = controller->IsButttonDown(StandardJoypad::Button::Select) ? 'T' : '-';
+		bitsStr[4] = controller->IsButttonDown(StandardJoypad::Button::Start) ? 'S' : '-';
+		bitsStr[5] = controller->IsButttonDown(StandardJoypad::Button::Up) ? 'U' : '-';
+		bitsStr[6] = controller->IsButttonDown(StandardJoypad::Button::Down) ? 'D' : '-';
+		bitsStr[7] = controller->IsButttonDown(StandardJoypad::Button::Left) ? 'L' : '-';
+		bitsStr[8] = controller->IsButttonDown(StandardJoypad::Button::Right) ? 'R' : '-';
+		bitsStr[9] = ']';
+		bitsStr[10] = '\0';
+
+		ImGui::Text("Buttons Down: %s", bitsStr);
+
+		bitsStr[1] = controller->ShiftReg() & (1 << 7) ? '1' : '-';
+		bitsStr[2] = controller->ShiftReg() & (1 << 6) ? '1' : '-';
+		bitsStr[3] = controller->ShiftReg() & (1 << 5) ? '1' : '-';
+		bitsStr[4] = controller->ShiftReg() & (1 << 4) ? '1' : '-';
+		bitsStr[5] = controller->ShiftReg() & (1 << 3) ? '1' : '-';
+		bitsStr[6] = controller->ShiftReg() & (1 << 2) ? '1' : '-';
+		bitsStr[7] = controller->ShiftReg() & (1 << 1) ? '1' : '-';
+		bitsStr[8] = controller->ShiftReg() & (1 << 0) ? '1' : '-';
+		
+		ImGui::Text("Shift Reg: %s", bitsStr);
 	}
 	ImGui::End();
 }

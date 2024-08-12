@@ -495,12 +495,13 @@ void CPU::ROL()
 {
 	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
-	_regStatus = val & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	bool oldBit7 = val & 0b10000000;
 
 	val <<= 1;
-
 	val |= _regStatus & STATUS_C;
+
+	_regStatus = oldBit7 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z; // possible bug here
 	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 
 	if (_isAccumOpcode)

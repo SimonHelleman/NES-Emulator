@@ -7,6 +7,7 @@
 #include "CPU.h"
 #include "PPU.h"
 #include "IOPort.h"
+#include "StandardJoypad.h"
 
 class System
 {
@@ -51,6 +52,12 @@ public:
 	{
 		if (port > 1) return nullptr;
 		return &_inputPort[port];
+	}
+
+	StandardJoypad* GetJoypad(int joypad)
+	{
+		if (joypad > 1) return nullptr;
+		return &_joypad[joypad];
 	}
 
 	void ChangeCartridge(Cartridge& cart);
@@ -109,6 +116,7 @@ private:
 
 	IOPort _outputPort = IOPort(PortDirection::Output);
 	IOPort _inputPort[2] = { IOPort(PortDirection::Input), IOPort(PortDirection::Input) };
+	StandardJoypad _joypad[2] = { StandardJoypad(_inputPort[0]), StandardJoypad(_inputPort[1])};
 
 	int _mapper = 0;
 	bool _continuousRun = false;

@@ -12,8 +12,8 @@ uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 		if (addr == 0x2007) return _ppu->ReadData();
 	}
 	
-	if (addr == 0x4016) return _inPort0.Get();
-	if (addr == 0x4017) return _inPort1.Get();
+	if (addr == 0x4016) return _inPort0.Get(silent);
+	if (addr == 0x4017) return _inPort1.Get(silent);
 
 	// Not yet implemented... supress unmapped warning for now
 	if (addr >= 0x4000 && addr <= 0x4017)
@@ -58,7 +58,11 @@ void CPUMapper0::Write(uint16_t addr, uint8_t data)
 		return;
 	}
 
-	if (addr == 0x4016) _outPort.Set(data);
+	if (addr == 0x4016)
+	{
+		_outPort.Set(data);
+		return;
+	}
 
 	// APU stuff.. Not today...
 	if (addr >= 0x4000 && addr <= 0x4017)
