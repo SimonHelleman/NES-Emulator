@@ -49,7 +49,7 @@ public:
 		return _latestInst;
 	}
 
-	std::vector<Instruction> GetInstrctionCache()
+	std::vector<Instruction> InstrctionCache() const 
 	{
 		return _instructionCache;
 	}

@@ -1,12 +1,14 @@
 #pragma once
-#include <utility>
-#include <array>
 #include <vector>
 #include <string>
 #include <GLFW/glfw3.h>
 #include "Logger.h"
-#include "Util/Image.h"
 #include "Util/Texture.h"
+#include "UI/PalettesUI.h"
+#include "UI/PatternTablesUI.h"
+#include "UI/DisassemblerUI.h"
+#include "UI/SystemControl.h"
+#include "UI/BreakpointsUI.h"
 #include "Memory/Cartridge.h"
 #include "System.h"
 
@@ -28,20 +30,8 @@ public:
 
 private:
 	void RenderUI();
-	
-	// TODO: evaluate use of pointers oppssed to const ref
-	static void RenderHexdump(const MemoryMap* memory, const char* title, int* page);
-	static void RenderIOPort(const IOPort* port, const char* title);
-	static void RenderStdController(const StandardJoypad* controller, const char* title);
-	
-	void RenderPatternTables();
-	void RenderPalettes();
-	void RenderDisassembly();
-	void RenderControl();
-	void RenderBreakpoints();
+
 	void RenderCartridge();
-	void RenderCPURegisters();
-	void RenderPPURegisters();
 	void RenderLog();
 
 private:
@@ -71,33 +61,17 @@ private:
 	int _framebufferScale = 1;
 	int _patternTableScale = 2;
 
-	bool _updateTable = false;
-	int _patternTablePaletteIndex[2] = { 0 , 0 };
-	Image _patternTable[2];
-	Texture _patternTableTex[2];
-
-	struct PaletteEntry
-	{
-		static constexpr size_t NUM_COLORS = 4;
-		
-		std::string id[NUM_COLORS];
-		float colorNorm[NUM_COLORS][3];
-	};
-
-	std::array<PaletteEntry, 8> _paletteEntry;
+	PalettesUI _palettes;
+	PatternTablesUI _patternTables;
+	SystemControl _control;
+	BreakpointsUI _breakpoints;
 
 	Texture _framebufferTex;
 
-	char _breakpointText[8];
-	bool _enableBreakpoints = true;
 
 	char _path[256] = { 0 };
 
-	bool _systemRun = false;
-
-
 	bool _logIncludeDebug = true;
-
 	bool _logIncludeInfo = true;
 	bool _logIncludeWarn = true;
 	bool _logIncludeError = true;

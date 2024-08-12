@@ -65,22 +65,22 @@ public:
 	void WriteData(uint8_t val);
 	uint8_t ReadData();
 	
-	Palette GetPalette(int paletteIndex);
+	Palette GetPalette(int paletteIndex) const;
 
-	Image GetTile(int table, uint8_t index, const Palette& palette);
-	Image GetPatternTable(int table, const Palette& palette);
+	Image GetTile(int table, uint8_t index, const Palette& palette) const;
+	Image GetPatternTable(int table, const Palette& palette) const;
 
-	uint16_t AddressReg()
+	uint16_t AddressReg() const
 	{
 		return _regAddr;
 	}
 
-	uint8_t DataReg()
+	uint8_t DataReg() const
 	{
 		return _regData;
 	}
 
-	uint8_t ControlReg()
+	uint8_t ControlReg() const
 	{
 		return _regControl;
 	}

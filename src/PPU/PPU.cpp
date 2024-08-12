@@ -136,7 +136,7 @@ uint8_t PPU::ReadData()
 	return ret;
 }
 
-PPU::Palette PPU::GetPalette(int paletteIndex)
+PPU::Palette PPU::GetPalette(int paletteIndex) const
 {
     assert(paletteIndex < 8);
     uint16_t startAddr = 0x3f01 + (4 * paletteIndex);
@@ -150,7 +150,7 @@ PPU::Palette PPU::GetPalette(int paletteIndex)
 }
 
 
-Image PPU::GetTile(int table, uint8_t index, const Palette& palette)
+Image PPU::GetTile(int table, uint8_t index, const Palette& palette) const
 {
     Image tile = Image(8, 8);
     uint16_t startAddr = 16 * index + (table * 4096);
@@ -182,7 +182,7 @@ Image PPU::GetTile(int table, uint8_t index, const Palette& palette)
 }
 
 
-Image PPU::GetPatternTable(int table, const Palette& palette)
+Image PPU::GetPatternTable(int table, const Palette& palette) const
 {
     assert(table < 2);
 

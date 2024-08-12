@@ -1,15 +1,16 @@
-#include <cstdint>
-#include <cstring>
-#include <sstream>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include "Util/FileDialogs.h"
+#include "UI/RegisterDisplays.h"
+#include "UI/HexdumpDisplay.h"
+#include "UI/IODisplays.h"
 #include "Application.h"
 
 Application::Application()
-	: _cart(), _system(_cart)
+	: _cart(), _system(_cart), _palettes(*_system.GetPPU()), _patternTables(*_system.GetPPU()),
+	  _control(_system), _breakpoints(_system)
 {
 	Logger& logger = Logger::Get();
 	logger.AddOutput(LogLevel::Debug | LogLevel::Info, Logger::StandardOutput);
@@ -77,27 +78,12 @@ Application::Application()
 	ImGui_ImplGlfw_InitForOpenGL(_window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+	_patternTables.InitTextures();
+
 	_system.Reset();
 
 	const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
 	_framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-
-	PPU::Palette patternTable1Palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[0]);
-	PPU::Palette patternTable2Palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[1]);
-	_patternTable[0] = _system.GetPPU()->GetPatternTable(0, patternTable1Palette);
-	_patternTable[1] = _system.GetPPU()->GetPatternTable(1, patternTable2Palette);
-	_patternTableTex[0] = Texture(_patternTable[0], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-	_patternTableTex[1] = Texture(_patternTable[1], Texture::Wrapping::Repeat, Texture::Filtering::Nearest);
-
-	for (size_t i = 0; i < _paletteEntry.size(); ++i)
-	{
-		for (int color = 0; color < 3; ++color)
-		{
-			char buf[16];
-			snprintf(buf, 16, "Palette %d.%d", (int)i, color);
-			_paletteEntry[i].id[color] = buf;
-		}
-	}
 }
 
 void Application::Run()
@@ -125,7 +111,7 @@ void Application::Run()
 		for (size_t i = 0; i <= 90000; ++i)
 		{
 			_system.Update();
-			_systemRun = _system.IsRunning();
+			_control.SetRunCheckbox(_system.IsRunning());
 		}
 
 		glfwPollEvents();
@@ -166,15 +152,15 @@ void Application::SetCartridge(const char* filepath)
 
 void Application::RenderUI()
 {
-	RenderHexdump(_system.CPUMemory(), "CPU Hexdump", &_hexdumpPageCPU);
-	RenderHexdump(_system.PPUMemory(), "PPU Hexdump", &_hexdumpPagePPU);
+	RenderHexdump(*_system.CPUMemory(), "CPU Hexdump", &_hexdumpPageCPU);
+	RenderHexdump(*_system.PPUMemory(), "PPU Hexdump", &_hexdumpPagePPU);
 
-	RenderIOPort(_system.GetOutputPort(), "IO Port: OUT");
-	RenderIOPort(_system.GetInputPort(0), "IO Port: IN0");
-	RenderIOPort(_system.GetInputPort(1), "IO Port: IN1");
+	RenderIOPort(*_system.GetOutputPort(), "IO Port: OUT");
+	RenderIOPort(*_system.GetInputPort(0), "IO Port: IN0");
+	RenderIOPort(*_system.GetInputPort(1), "IO Port: IN1");
 
-	RenderStdController(_system.GetJoypad(0), "JOY0");
-	RenderStdController(_system.GetJoypad(1), "JOY1");
+	RenderStdJoypad(*_system.GetJoypad(0), "JOY0");
+	RenderStdJoypad(*_system.GetJoypad(1), "JOY1");
 
 	ImGui::Begin("PPU Framebuffer");
 	{
@@ -207,254 +193,15 @@ void Application::RenderUI()
 	}
 	ImGui::End();
 
-	RenderPalettes();
-	RenderPatternTables();
-	RenderDisassembly();
-	RenderControl();
-	RenderBreakpoints();
+	_palettes.Render();
+	_patternTables.Render(_palettes.HasChanged(), _patternTableScale);
+	_breakpoints.Render();
+	_control.Render();
+	RenderDisassembler(*_system.GetDissembler());
 	RenderCartridge();
-	RenderCPURegisters();
-	RenderPPURegisters();
+	RenderCPURegisters(*_system.GetCPU());
+	RenderPPURegisters(*_system.GetPPU());
 	RenderLog();
-}
-
-void Application::RenderHexdump(const MemoryMap* memory, const char* title, int* page)
-{
-	ImGui::Begin(title);
-	{
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, { 0.0f, 0.0f });
-		ImGui::SliderInt("Page", page, 0, 0xff, "%02x");
-		if (ImGui::BeginTable("hexdump", 17))
-		{
-			uint16_t dumpStart = *page * 256;
-			uint16_t addr = dumpStart;
-			do
-			{
-				if (addr % 16 == 0)
-				{
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-					ImGui::Text("%04x:", addr);
-				}
-				ImGui::TableNextColumn();
-				ImGui::Text("%02x", memory->Read(addr, true));
-				++addr;
-			} while (addr && addr < dumpStart + 256);
-
-			ImGui::EndTable();
-		}
-		ImGui::PopStyleVar();
-	}
-	ImGui::End();
-}
-
-void Application::RenderIOPort(const IOPort* port, const char* title)
-{
-	ImGui::Begin(title);
-	{
-		const char* directionText = port->Direction() == PortDirection::Input ? 
-			"Direction: Input" : "Direction: Output";
-		
-		ImGui::Text(directionText);
-
-		char bits[12];
-		bits[0] = '[';
-		const int numPins = port->Direction() == PortDirection::Input ? 5 : 3;
-		int i;
-		for (i = 1; i < numPins + 1; ++i)
-		{
-			bits[i] = port->GetPin(i - 1) ? 'H' : 'L';
-		}
-		bits[i++] = ']';
-		bits[i] = '\0';
-
-		ImGui::Text(bits);
-		
-		if (port->Direction() == PortDirection::Input)
-		{
-			ImGui::Text("OE: %d", port->GetOE());
-		}
-	}
-	ImGui::End();
-}
-
-void Application::RenderStdController(const StandardJoypad* controller, const char* title)
-{
-	ImGui::Begin(title);
-	{
-		char bitsStr[12];
-		bitsStr[0] = '[';
-		bitsStr[1] = controller->IsButttonDown(StandardJoypad::Button::A) ? 'A' : '-';
-		bitsStr[2] = controller->IsButttonDown(StandardJoypad::Button::B) ? 'B' : '-';
-		bitsStr[3] = controller->IsButttonDown(StandardJoypad::Button::Select) ? 'T' : '-';
-		bitsStr[4] = controller->IsButttonDown(StandardJoypad::Button::Start) ? 'S' : '-';
-		bitsStr[5] = controller->IsButttonDown(StandardJoypad::Button::Up) ? 'U' : '-';
-		bitsStr[6] = controller->IsButttonDown(StandardJoypad::Button::Down) ? 'D' : '-';
-		bitsStr[7] = controller->IsButttonDown(StandardJoypad::Button::Left) ? 'L' : '-';
-		bitsStr[8] = controller->IsButttonDown(StandardJoypad::Button::Right) ? 'R' : '-';
-		bitsStr[9] = ']';
-		bitsStr[10] = '\0';
-
-		ImGui::Text("Buttons Down: %s", bitsStr);
-
-		bitsStr[1] = controller->ShiftReg() & (1 << 7) ? '1' : '-';
-		bitsStr[2] = controller->ShiftReg() & (1 << 6) ? '1' : '-';
-		bitsStr[3] = controller->ShiftReg() & (1 << 5) ? '1' : '-';
-		bitsStr[4] = controller->ShiftReg() & (1 << 4) ? '1' : '-';
-		bitsStr[5] = controller->ShiftReg() & (1 << 3) ? '1' : '-';
-		bitsStr[6] = controller->ShiftReg() & (1 << 2) ? '1' : '-';
-		bitsStr[7] = controller->ShiftReg() & (1 << 1) ? '1' : '-';
-		bitsStr[8] = controller->ShiftReg() & (1 << 0) ? '1' : '-';
-		
-		ImGui::Text("Shift Reg: %s", bitsStr);
-	}
-	ImGui::End();
-}
-
-void Application::RenderPalettes()
-{
-	ImGui::Begin("Palettes");
-	{
-		for (int i = 0; i < _paletteEntry.size(); ++i)
-		{
-			PPU::Palette palette = _system.GetPPU()->GetPalette(i);
-
-			for (int color = 0; color < 4; ++color)
-			{
-				float newR = palette.color[color].r / 255.0f;
-				float newG = palette.color[color].g / 255.0f;
-				float newB = palette.color[color].b / 255.0f;
-
-				float oldR = _paletteEntry[i].colorNorm[color][0];
-				float oldG = _paletteEntry[i].colorNorm[color][1];
-				float oldB = _paletteEntry[i].colorNorm[color][2];
-
-				if (newR != oldR || newG != oldG || newB != oldB)
-				{
-					_paletteEntry[i].colorNorm[color][0] = newR;
-					_paletteEntry[i].colorNorm[color][1] = newG;
-					_paletteEntry[i].colorNorm[color][2] = newB;
-					_updateTable = true;
-				}
- 
-				ImGui::ColorEdit3(_paletteEntry[i].id[color].c_str(), _paletteEntry[i].colorNorm[color], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel);
-				if (color != 3) ImGui::SameLine();
-			}
-		}
-	}
-	ImGui::End();
-}
-
-void Application::RenderPatternTables()
-{
-	ImGui::Begin("Pattern Tables");
-	{
-		if (ImGui::SliderInt("Left Palette", &_patternTablePaletteIndex[0], 0, 7, "%d") || _updateTable)
-		{
-			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[0]);
-			_patternTable[0] = _system.GetPPU()->GetPatternTable(0, palette);
-			_patternTableTex[0].Update(_patternTable[0]);
-		}
-
-		if (ImGui::SliderInt("Right Palette", &_patternTablePaletteIndex[1], 0, 7, "%d") || _updateTable)
-		{
-			PPU::Palette palette = _system.GetPPU()->GetPalette(_patternTablePaletteIndex[1]);
-			_patternTable[1] = _system.GetPPU()->GetPatternTable(1, palette);
-			_patternTableTex[1].Update(_patternTable[1]);
-		}
-
-		ImGui::Image((void*)(intptr_t)_patternTableTex[0].TextureId(), ImVec2((float)_patternTable[0].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
-		ImGui::SameLine();
-		ImGui::Image((void*)(intptr_t)_patternTableTex[1].TextureId(), ImVec2((float)_patternTable[1].Width() * _patternTableScale, (float)_patternTable[1].Height() * _patternTableScale));
-	}
-	ImGui::End();
-
-	_updateTable = false;
-}
-
-void Application::RenderDisassembly()
-{
-	std::vector<Disassembler::Instruction> instruction = _system.GetDissembler()->GetInstrctionCache();
-	ImGui::Begin("Disassembly");
-	{
-		if (ImGui::BeginTable("disassembly", 2))
-		{
-			for (size_t i = 0; i < instruction.size(); ++i)
-			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("%04x", instruction[i].address);
-				ImGui::TableNextColumn();
-				ImGui::Text(Disassembler::GetDisassemblyLine(instruction[i]).c_str());
-			}
-			ImGui::EndTable();
-		}
-	}
-	ImGui::End();
-}
-
-void Application::RenderControl()
-{
-	ImGui::Begin("Control");
-	{
-		ImGui::Text("Cycles: %ld", _system.CycleCount());
-
-		ImGui::Checkbox("Run", &_systemRun);
-		_system.Run(_systemRun);
-
-		if (ImGui::Button("Clock Step"))
-		{
-			_system.ClockStep();
-		}
-
-		if (ImGui::Button("Instruction Step"))
-		{
-			_system.InstructionStep();
-		}
-
-		if (ImGui::Button("Frame Step"))
-		{
-			_system.FrameStep();
-		}
-	}
-	ImGui::End();
-}
-
-void Application::RenderBreakpoints()
-{
-	ImGui::Begin("Breakpoints");
-	{
-		if (ImGui::Checkbox("Enable", &_enableBreakpoints))
-		{
-			_system.EnableBreakpoints(_enableBreakpoints);
-		}
-
-		// Setting buffer size to 5 just to limit it to a 4 digit number
-		ImGui::InputText("Address", _breakpointText, 5, ImGuiInputTextFlags_CharsHexadecimal);
-
-		if (ImGui::Button("Add Breakpoint") && strlen(_breakpointText) > 0)
-		{
-			uint16_t addr;
-			std::stringstream ss;
-			ss << std::hex << _breakpointText;
-			ss >> addr;
-			_system.AddBreakpoint(addr);
-		}
-
-		for (uint16_t b : _system.GetBreakpoints())
-		{
-			ImGui::Text("%04x", b);
-			ImGui::SameLine();
-			char buf[16];
-			snprintf(buf, 16, "Delete##%d", b);
-			if (ImGui::Button(buf))
-			{
-				_system.RemoveBreakpoint(b);
-				break; // Sneaky break. A tad hacky but it works
-			}
-		}
-	}
-	ImGui::End();
 }
 
 void Application::RenderCartridge()
@@ -487,56 +234,6 @@ void Application::RenderCartridge()
 
 		ImGui::SameLine();
 		ImGui::Text("%s", _cart.Name().c_str());
-	}
-	ImGui::End();
-}
-
-void Application::RenderCPURegisters()
-{
-	ImGui::Begin("CPU Registers");
-	{
-		ImGui::Text("A:  %02x", _system.GetCPU()->GetA());
-		ImGui::Text("X:  %02x", _system.GetCPU()->GetX());
-		ImGui::Text("Y:  %02x", _system.GetCPU()->GetY());
-		ImGui::Text("SP: %02x", _system.GetCPU()->GetSP());
-		ImGui::Text("PC: %04x", _system.GetCPU()->GetProgramCounter());
-
-		char flags[9];
-		uint8_t status = _system.GetCPU()->GetStatusReg();
-		flags[0] = status & CPU::STATUS_N ? 'N' : '-';
-		flags[1] = status & CPU::STATUS_V ? 'V' : '-';
-		flags[2] = status & CPU::STATUS_5 ? '5' : '-';
-		flags[3] = status & CPU::STATUS_B ? 'B' : '-';
-		flags[4] = status & CPU::STATUS_D ? 'D' : '-';
-		flags[5] = status & CPU::STATUS_I ? 'I' : '-';
-		flags[6] = status & CPU::STATUS_Z ? 'Z' : '-';
-		flags[7] = status & CPU::STATUS_C ? 'C' : '-';
-		flags[8] = '\0';
-
-		ImGui::Text("Status: %02x [%s]", status, flags);
-	}
-	ImGui::End();
-}
-
-void Application::RenderPPURegisters()
-{
-	ImGui::Begin("PPU Registers");
-	{
-		ImGui::Text("Addr: %04x", _system.GetPPU()->AddressReg());
-		ImGui::Text("Data: %02x", _system.GetPPU()->DataReg());
-	
-		char flags[9];
-		uint8_t control = _system.GetPPU()->ControlReg();
-		flags[0] = control & PPU::CONTROL_V ? 'V' : '-';
-		flags[1] = control & PPU::CONTROL_P ? 'P' : '-';
-		flags[2] = control & PPU::CONTROL_H ? 'H' : '-';
-		flags[3] = control & PPU::CONTROL_B ? 'B' : '-';
-		flags[4] = control & PPU::CONTROL_S ? 'S' : '-';
-		flags[5] = control & PPU::CONTROL_I ? 'I' : '-';
-		flags[6] = control & PPU::CONTROL_2 ? '2' : '-';
-		flags[7] = control & PPU::CONTROL_1 ? '1' : '-';
-		flags[8] = '\0';
-		ImGui::Text("Control: %02x [%s]", control, flags);
 	}
 	ImGui::End();
 }
