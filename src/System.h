@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
 #include <set>
-#include "Cartridge.h"
-#include "Mapper0.h"
-#include "Disassembler.h"
-#include "CPU.h"
-#include "PPU.h"
-#include "IOPort.h"
-#include "StandardJoypad.h"
+#include "Memory/Cartridge.h"
+#include "Memory/Mapper0.h"
+#include "CPU/Disassembler.h"
+#include "CPU/CPU.h"
+#include "PPU/PPU.h"
+#include "IO/IOPort.h"
+#include "IO/StandardJoypad.h"
 
 class System
 {

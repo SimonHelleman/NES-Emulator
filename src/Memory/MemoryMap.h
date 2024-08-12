@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 #include "NametableMirroring.h"
-#include "IOPort.h"
+#include "IO/IOPort.h"
 
 class PPU;
 

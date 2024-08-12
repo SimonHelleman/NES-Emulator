@@ -5,7 +5,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
-#include "FileDialogs.h"
+#include "Util/FileDialogs.h"
 #include "Application.h"
 
 Application::Application()
@@ -78,7 +78,6 @@ Application::Application()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	_system.Reset();
-	_system.AddBreakpoint(0xc5d5);
 
 	const Image& framebuffer = _system.GetPPU()->GetFramebuffer();
 	_framebufferTex = Texture(framebuffer, Texture::Wrapping::Repeat, Texture::Filtering::Nearest);

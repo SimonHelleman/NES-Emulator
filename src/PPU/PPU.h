@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <memory>
-#include "MemoryMap.h"
-#include "Image.h"
+#include "Memory/MemoryMap.h"
+#include "Util/Image.h"
 
 class PPU
 {

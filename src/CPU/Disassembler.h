@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-#include "MemoryMap.h"
+#include "Memory/MemoryMap.h"
 #include "CPUAdressingMode.h"
 
 class Disassembler

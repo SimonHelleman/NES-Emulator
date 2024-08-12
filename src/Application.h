@@ -5,9 +5,9 @@
 #include <string>
 #include <GLFW/glfw3.h>
 #include "Logger.h"
-#include "Image.h"
-#include "Texture.h"
-#include "Cartridge.h"
+#include "Util/Image.h"
+#include "Util/Texture.h"
+#include "Memory/Cartridge.h"
 #include "System.h"
 
 class Application

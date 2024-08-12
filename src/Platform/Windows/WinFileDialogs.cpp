@@ -3,8 +3,8 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-#include "../../Application.h"
-#include "../../FileDialogs.h"
+#include "Application.h"
+#include "Util/FileDialogs.h"
 
 bool FileDialogs::Available()
 {

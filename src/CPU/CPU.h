@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <memory>
 #include <functional>
-#include "MemoryMap.h"
+#include "Memory/MemoryMap.h"
 #include "Disassembler.h"
 
 class CPU

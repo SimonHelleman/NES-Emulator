@@ -1,5 +1,5 @@
 #pragma once
-#include "PPU.h"
+#include "PPU/PPU.h"
 #include "MemoryMap.h"
 
 class CPUMapper0 : public CPUMemoryMap
