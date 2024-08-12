@@ -1,5 +1,5 @@
 #ifndef _WIN64
-#include "../FileDialogs.h"
+#include "FileDialogs.h"
 
 bool FileDialogs::Available()
 {
