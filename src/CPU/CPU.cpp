@@ -183,7 +183,7 @@ void CPU::NOP()
 
 void CPU::BIT()
 {
-	uint8_t target = _memory.Read(_currentAddr);
+	const uint8_t target = _memory.Read(_currentAddr);
 	_regStatus = (_regA & target) == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 	_regStatus = target & 0b01000000 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
 	_regStatus = target & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
@@ -204,7 +204,7 @@ void CPU::LDY()
 
 void CPU::CPY()
 {
-	uint8_t target = _memory.Read(_currentAddr);
+	const uint8_t target = _memory.Read(_currentAddr);
 
 	_regStatus = _regY >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regY == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
@@ -213,7 +213,7 @@ void CPU::CPY()
 
 void CPU::CPX()
 {
-	uint8_t target = _memory.Read(_currentAddr);
+	const uint8_t target = _memory.Read(_currentAddr);
 
 	_regStatus = _regX >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regX == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
@@ -409,18 +409,20 @@ void CPU::EOR()
 
 void CPU::ADC()
 {
-	int8_t oldA = static_cast<int8_t>(_regA);
-	int8_t addend = static_cast<int8_t>(_memory.Read(_currentAddr));
+	const int8_t oldA = static_cast<int8_t>(_regA);
+	const int8_t addend = static_cast<int8_t>(_memory.Read(_currentAddr));
 	_regA += static_cast<uint8_t>(addend) + ((_regStatus & STATUS_C) ? 1 : 0);
 
-	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	const uint16_t carryTest = static_cast<uint16_t>(oldA) + static_cast<uint16_t>(addend) + ((_regStatus & STATUS_C) ? 1 : 0);
+	_regStatus = carryTest > 255 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	//_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 	
 	// Overflow:
 	//     Case 1 -> neg + neg = pos (both sign bits set but sum sign bit not set) 
 	//     Case 2 -> pos + pos = neg (both sign bits not set but sum sign bit set)
-	bool overflowCase1 = oldA < 0 && addend < 0 && static_cast<int8_t>(_regA) > 0;
-	bool overflowCase2 = oldA > 0 && addend > 0 && static_cast<int8_t>(_regA) < 0;
+	const bool overflowCase1 = oldA < 0 && addend < 0 && static_cast<int8_t>(_regA) > 0;
+	const bool overflowCase2 = oldA > 0 && addend > 0 && static_cast<int8_t>(_regA) < 0;
 	_regStatus = overflowCase1 || overflowCase2 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
 
 	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
@@ -440,7 +442,7 @@ void CPU::LDA()
 
 void CPU::CMP()
 {
-	uint8_t target = _memory.Read(_currentAddr);
+	const uint8_t target = _memory.Read(_currentAddr);
 
 	_regStatus = _regA >= target ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regA == target ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
@@ -474,11 +476,12 @@ void CPU::LDX()
 void CPU::ASL()
 {
 	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
+
 	_regStatus = val & 0b10000000 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
 	val <<= 1;
 
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 
 	if (_isAccumOpcode)
@@ -494,8 +497,7 @@ void CPU::ASL()
 void CPU::ROL()
 {
 	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
-
-	bool oldBit7 = val & 0b10000000;
+	const bool oldBit7 = val & 0b10000000;
 
 	val <<= 1;
 	val |= _regStatus & STATUS_C;
@@ -519,10 +521,10 @@ void CPU::LSR()
 	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
 	_regStatus = val & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
 	val >>= 1;
 
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 
 	if (_isAccumOpcode)
@@ -539,11 +541,13 @@ void CPU::ROR()
 {
 	uint8_t val = _isAccumOpcode ? _regA : _memory.Read(_currentAddr);
 
-	_regStatus = val & 0b00000001 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	const bool oldBit0 = val & 0b00000001;
 
 	val >>= 1;
 	val |= (_regStatus & STATUS_C) << 7;
+	
+	_regStatus = val == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
+	_regStatus = oldBit0 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = val & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
 
 	if (_isAccumOpcode)
@@ -692,16 +696,16 @@ void CPU::ZeroPageIndexedY()
 
 void CPU::Absolute()
 {
-	uint8_t addrLow = _memory.Read(_regPC++);
-	uint8_t addrHigh = _memory.Read(_regPC++);
+	const uint8_t addrLow = _memory.Read(_regPC++);
+	const uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = addrHigh << 8 | addrLow;
 }
 
 void CPU::AbsoluteIndexedX()
 {
-	uint8_t addrLow = _memory.Read(_regPC++);
-	uint8_t addrHigh = _memory.Read(_regPC++);
+	const uint8_t addrLow = _memory.Read(_regPC++);
+	const uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = (addrHigh << 8 | addrLow) + _regX;
 
@@ -714,8 +718,8 @@ void CPU::AbsoluteIndexedX()
 
 void CPU::AbsoluteIndexedY()
 {
-	uint8_t addrLow = _memory.Read(_regPC++);
-	uint8_t addrHigh = _memory.Read(_regPC++);
+	const uint8_t addrLow = _memory.Read(_regPC++);
+	const uint8_t addrHigh = _memory.Read(_regPC++);
 
 	_currentAddr = (addrHigh << 8 | addrLow) + _regY;
 
@@ -733,31 +737,33 @@ void CPU::Relative()
 
 void CPU::Indirect()
 {
-	uint8_t ptrLow = _memory.Read(_regPC++);
-	uint8_t ptrHigh = _memory.Read(_regPC++);
+	const uint8_t ptrLow = _memory.Read(_regPC++);
+	const uint8_t ptrHigh = _memory.Read(_regPC++);
 
-	uint8_t addrLow = _memory.Read(ptrLow);
-	uint8_t addrHigh = _memory.Read(ptrHigh);
+	const uint16_t ptr = (ptrHigh << 8) | ptrLow;
+
+	const uint8_t addrLow = _memory.Read(ptr);
+	const uint8_t addrHigh = _memory.Read(ptr + 1);
 
 	_currentAddr = (addrHigh << 8) | addrLow;
 }
 
 void CPU::IndexedIndirectX()
 {
-	uint8_t ptrLow = _memory.Read(_regPC++);
+	const uint8_t ptrLow = _memory.Read(_regPC++);
 
-	uint8_t addrLow = _memory.Read(ptrLow + _regX & 0x00ff);
-	uint8_t addrHigh = _memory.Read(ptrLow + _regX + 1 & 0x00ff);
+	const uint8_t addrLow = _memory.Read(ptrLow + _regX & 0x00ff);
+	const uint8_t addrHigh = _memory.Read(ptrLow + _regX + 1 & 0x00ff);
 
 	_currentAddr = (addrHigh << 8) | addrLow;
 }
 
 void CPU::IndirectIndexedY()
 {
-	uint16_t ptrLow = _memory.Read(_regPC++);
+	const uint16_t ptrLow = _memory.Read(_regPC++);
 
-	uint8_t addrLow = _memory.Read(ptrLow & 0x00ff);
-	uint8_t addrHigh = _memory.Read((ptrLow + 1) & 0x00ff);
+	const uint8_t addrLow = _memory.Read(ptrLow & 0x00ff);
+	const uint8_t addrHigh = _memory.Read((ptrLow + 1) & 0x00ff);
 
 	_currentAddr = ((addrHigh << 8) | addrLow) + _regY;
 }
