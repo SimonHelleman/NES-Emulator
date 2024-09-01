@@ -38,6 +38,11 @@ uint8_t CPUMapper0::Read(uint16_t addr, bool silent) const
 
 void CPUMapper0::Write(uint16_t addr, uint8_t data)
 {
+	if (addr == 0 && data != 0)
+	{
+		INFO(std::string("nestest fail: ") + Int8HexString(data));
+	}
+
 	if (addr <= 0x1fff)
 	{
 		_ram[addr % RAM_SIZE] = data;

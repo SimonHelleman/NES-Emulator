@@ -125,7 +125,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 	ret[0x67] = { "RRA", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::RRA, 5, 2 };
 	ret[0x68] = { "PLA", AdressingMode::Implied, &CPU::Implied, &CPU::PLA, 4, 1 };
 	ret[0x69] = { "ADC", AdressingMode::Immediate, &CPU::Immediate, &CPU::ADC, 2, 2 };
-	ret[0x6a] = { "ROR", AdressingMode::Implied, &CPU::Implied, &CPU::ROR, 2, 1 };
+	ret[0x6a] = { "ROR", AdressingMode::Accumulator, &CPU::Accumulator, &CPU::ROR, 2, 1 }; // *
 	ret[0x6b] = { "ARR", AdressingMode::Immediate, &CPU::Immediate, &CPU::ARR, 2, 2 };
 	ret[0x6c] = { "JMP", AdressingMode::Indirect, &CPU::Indirect, &CPU::JMP, 5, 3 };
 	ret[0x6d] = { "ADC", AdressingMode::Absolute, &CPU::Absolute, &CPU::ADC, 4, 3 };

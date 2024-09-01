@@ -413,9 +413,7 @@ void CPU::ADC()
 	const int8_t addend = static_cast<int8_t>(_memory.Read(_currentAddr));
 	_regA += static_cast<uint8_t>(addend) + ((_regStatus & STATUS_C) ? 1 : 0);
 
-	const uint16_t carryTest = static_cast<uint16_t>(oldA) + static_cast<uint16_t>(addend) + ((_regStatus & STATUS_C) ? 1 : 0);
-	_regStatus = carryTest > 255 ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
-	//_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
+	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 	
 	// Overflow:
@@ -451,15 +449,18 @@ void CPU::CMP()
 
 void CPU::SBC()
 {
-	int8_t oldA = static_cast<int8_t>(_regA);
-	int8_t subtrahend = static_cast<int8_t>(_memory.Read(_currentAddr));
-	_regA -= static_cast<uint8_t>(subtrahend) + ((_regStatus & STATUS_C) ? 0 : 1);
+	const int8_t oldA = static_cast<int8_t>(_regA);
+	
+	// invert subtrahend -> just do negative addition.
+	const int8_t subtrahend = static_cast<int8_t>(_memory.Read(_currentAddr)) ^ 0xff;
 
-	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus & ~STATUS_C : _regStatus | STATUS_C;
+	_regA += static_cast<uint8_t>(subtrahend) + ((_regStatus & STATUS_C) ? 1 : 0);
+
+	_regStatus = _regA < static_cast<uint8_t>(oldA) ? _regStatus | STATUS_C : _regStatus & ~STATUS_C;
 	_regStatus = _regA == 0 ? _regStatus | STATUS_Z : _regStatus & ~STATUS_Z;
 
-	bool overflowCase1 = oldA < 0 && subtrahend < 0 && static_cast<int8_t>(_regA) > 0;
-	bool overflowCase2 = oldA > 0 && subtrahend > 0 && static_cast<int8_t>(_regA) < 0;
+	const bool overflowCase1 = oldA < 0 && subtrahend < 0 && static_cast<int8_t>(_regA) > 0;
+	const bool overflowCase2 = oldA > 0 && subtrahend > 0 && static_cast<int8_t>(_regA) < 0;
 	_regStatus = overflowCase1 || overflowCase2 ? _regStatus | STATUS_V : _regStatus & ~STATUS_V;
 
 	_regStatus = _regA & 0b10000000 ? _regStatus | STATUS_N : _regStatus & ~STATUS_N;
