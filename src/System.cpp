@@ -1,3 +1,4 @@
+#include "Logger.h"
 #include "System.h"
 
 System::System(Cartridge& cart)
@@ -67,8 +68,8 @@ void System::Update()
 	{
 		if (_enableBreakpoints)
 		{
-			const auto& search = _breakpoints.find(_cpu->GetProgramCounter());
-			if (search != _breakpoints.end() && _cpu->GetCurrentState() == CPU::State::Fetch)
+			const auto& search = _breakpoints.find(_cpu->ProgramCounter());
+			if (search != _breakpoints.end() && _cpu->CurrentState() == CPU::State::Fetch)
 			{
 				if (!_haltedBreakpoint)
 				{
@@ -144,7 +145,14 @@ void System::SystemClock()
 	if (++_cycleCount % 3 == 0)
 	{
 		_haltedBreakpoint = false;
-		_cpu->Clock();
+		try
+		{
+			_cpu->Clock();
+		}
+		catch (const std::exception& ex)
+		{
+			ERROR("[CPU]" + std::string(ex.what()));
+		}
 	}
 
 	if (_ppu->PendingNMI())

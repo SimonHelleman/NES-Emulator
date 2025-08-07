@@ -62,12 +62,12 @@ public:
 
 	std::string GetLatestDissamblyLine() const
 	{
-		return GetDisassemblyLine(_latestInst);
+		return MakeDisassemblyLine(_latestInst);
 	}
 
 	void WriteToFile(const char* filepath) const;
 
-	static std::string GetDisassemblyLine(const Instruction& inst);
+	static std::string MakeDisassemblyLine(const Instruction& inst);
 
 private:
 	std::map<uint16_t, Instruction> _disassembly;

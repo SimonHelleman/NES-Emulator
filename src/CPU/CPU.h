@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <exception>
 #include <memory>
+#include <string>
 #include <functional>
 #include "Memory/MemoryMap.h"
 #include "Disassembler.h"
@@ -30,6 +32,17 @@ public:
 		int size;
 	};
 
+	class UnimplementedInstructionException : public std::exception
+	{
+	public:
+		UnimplementedInstructionException(uint8_t opcode, std::pair<Disassembler::Instruction, bool> inst);
+
+		const char* what() const noexcept override;
+	private:
+		std::string _what;
+	};
+
+
 	enum class State
 	{
 		Fetch,
@@ -37,42 +50,42 @@ public:
 		Execute
 	};
 
-	const Opcode& GetCurrentInstruction() const
+	const Opcode& CurrentInstruction() const
 	{
 		return _currentInstruction;
 	}
 
-	State GetCurrentState() const
+	State CurrentState() const
 	{
 		return _currentState;
 	}
 
-	uint16_t GetProgramCounter() const
+	uint16_t ProgramCounter() const
 	{
 		return _regPC;
 	}
 
-	uint8_t GetA() const
+	uint8_t AReg() const
 	{
 		return _regA;
 	}
 
-	uint8_t GetX() const
+	uint8_t XReg() const
 	{
 		return _regX;
 	}
 
-	uint8_t GetY() const
+	uint8_t YReg() const
 	{
 		return _regY;
 	}
 
-	uint8_t GetSP() const
+	uint8_t StackPtr() const
 	{
 		return _regSP;
 	}
 
-	uint8_t GetStatusReg() const
+	uint8_t StatusReg() const
 	{
 		return _regStatus;
 	}
@@ -85,13 +98,17 @@ public:
 	std::unique_ptr<Opcode[]> CreateOpcodeMatrix();
 
 private:
-	void HandleIRQ();
-	void HandleNMI();
+	void SetupIRQ();
+	void SetupNMI();
+	void SetupNextInstruction();
 
 	void AddToDisassembly();
 
+
 // CPU instructions
 private:
+
+	void Unimplemented();
 
 	void BRK();
 	void JSR();
@@ -221,6 +238,7 @@ private:
 	uint16_t _currentAddr = 0;
 	int8_t _branchOffset = 0;
 	Opcode _currentInstruction = { 0 };
+	uint8_t _currentOpcode = 0;
 	State _currentState = State::Fetch;
 
 	std::unique_ptr<Opcode[]> _opcodeMatrix;

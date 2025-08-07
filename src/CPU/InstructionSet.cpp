@@ -15,7 +15,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 	// LAS: Unofficial opthat has no documentation
 	ret[0x00] = { "BRK", AdressingMode::Implied, &CPU::Implied, &CPU::BRK, 7, 1 };
 	ret[0x01] = { "ORA", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::ORA, 6, 2 };
-	ret[0x02] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x02] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x03] = { "SLO", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::SLO, 8, 2 };
 	ret[0x04] = { "NOP", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::NOP, 4, 2 };
 	ret[0x05] = { "ORA", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::ORA, 3, 2 };
@@ -32,7 +32,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x10] = { "BPL", AdressingMode::Relative, &CPU::Relative, &CPU::BPL, 2, 2 };
 	ret[0x11] = { "ORA", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::ORA, 5, 2 };
-	ret[0x12] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x12] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x13] = { "SLO", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::SLO, 8, 2 };
 	ret[0x14] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0x15] = { "ORA", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::ORA, 4, 2 };
@@ -49,7 +49,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x20] = { "JSR", AdressingMode::Absolute, &CPU::Absolute, &CPU::JSR, 6, 3 };
 	ret[0x21] = { "AND", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::AND, 6, 2 };
-	ret[0x22] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x22] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x23] = { "RLA", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::RLA, 8, 2 };
 	ret[0x24] = { "BIT", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::BIT, 3, 2 };
 	ret[0x25] = { "AND", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::AND, 3, 2 };
@@ -66,7 +66,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x30] = { "BMI", AdressingMode::Relative, &CPU::Relative, &CPU::BMI, 2, 2 };
 	ret[0x31] = { "AND", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::AND, 5, 2 };
-	ret[0x32] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 };
+	ret[0x32] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, 1, 1 };
 	ret[0x33] = { "RLA", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::RLA, 8, 2 };
 	ret[0x34] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0x35] = { "AND", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::AND, 4, 2 };
@@ -83,7 +83,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x40] = { "RTI", AdressingMode::Implied, &CPU::Implied, &CPU::RTI, 6, 1 };
 	ret[0x41] = { "EOR", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::EOR, 6, 2 };
-	ret[0x42] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x42] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x43] = { "SRE", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::SRE, 8, 2 };
 	ret[0x44] = { "NOP", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::NOP, 3, 2 }; // aka IGN
 	ret[0x45] = { "EOR", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::EOR, 3, 2 };
@@ -100,7 +100,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x50] = { "BVC", AdressingMode::Relative, &CPU::Relative, &CPU::BVC, 2, 2 };
 	ret[0x51] = { "EOR", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::EOR, 5, 2 };
-	ret[0x52] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x52] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x53] = { "SRE", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::SRE, 8, 2 };
 	ret[0x54] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0x55] = { "EOR", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::EOR, 4, 2 };
@@ -117,7 +117,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x60] = { "RTS", AdressingMode::Implied, &CPU::Implied, &CPU::RTS, 6, 1 };
 	ret[0x61] = { "ADC", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::ADC, 6, 2 };
-	ret[0x62] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x62] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x63] = { "RRA", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::RRA, 8, 2 };
 	ret[0x64] = { "NOP", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::NOP, 3, 2 }; // aka IGN
 	ret[0x65] = { "ADC", AdressingMode::ZeroPage, &CPU::ZeroPage, &CPU::ADC, 3, 2 };
@@ -134,7 +134,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x70] = { "BVS", AdressingMode::Relative, &CPU::Relative, &CPU::BVS, 2, 2 };
 	ret[0x71] = { "ADC", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::ADC, 5, 2 };
-	ret[0x72] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x72] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x73] = { "RRA", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::RRA, 8, 2 };
 	ret[0x74] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0x75] = { "ADC", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::ADC, 4, 2 };
@@ -160,7 +160,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 	ret[0x88] = { "DEY", AdressingMode::Implied, &CPU::Implied, &CPU::DEY, 2, 1 };
 	ret[0x89] = { "NOP", AdressingMode::Immediate, &CPU::Immediate, &CPU::NOP, 2, 2 }; // aka SKB
 	ret[0x8a] = { "TXA", AdressingMode::Implied, &CPU::Implied, &CPU::TXA, 2, 1 };
-	ret[0x8b] = { "XAA", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x8b] = { "XAA", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x8c] = { "STY", AdressingMode::Absolute, &CPU::Absolute, &CPU::STY, 4, 3 };
 	ret[0x8d] = { "STA", AdressingMode::Absolute, &CPU::Absolute, &CPU::STA, 4, 3 };
 	ret[0x8e] = { "STX", AdressingMode::Absolute, &CPU::Absolute, &CPU::STX, 4, 3 };
@@ -168,8 +168,8 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0x90] = { "BCC", AdressingMode::Relative, &CPU::Relative, &CPU::BCC, 2, 2 };
 	ret[0x91] = { "STA", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::STA, 6, 2 };
-	ret[0x92] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
-	ret[0x93] = { "AHX", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x92] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
+	ret[0x93] = { "AHX", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x94] = { "STY", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::STY, 4, 2 };
 	ret[0x95] = { "STA", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::STA, 4, 2 };
 	ret[0x96] = { "STA", AdressingMode::ZeroPageIndexedY, &CPU::ZeroPageIndexedY, &CPU::STX, 4, 2 };
@@ -177,11 +177,11 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 	ret[0x98] = { "TYA", AdressingMode::Implied, &CPU::Implied, &CPU::TYA, 2, 1 };
 	ret[0x99] = { "STA", AdressingMode::AbsoluteIndexedY, &CPU::AbsoluteIndexedY, &CPU::STA, 5, 3 };
 	ret[0x9a] = { "TXS", AdressingMode::Implied, &CPU::Implied, &CPU::TXS, 2, 1 };
-	ret[0x9b] = { "TAS", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
-	ret[0x9c] = { "SHY", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x9b] = { "TAS", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
+	ret[0x9c] = { "SHY", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0x9d] = { "STA", AdressingMode::AbsoluteIndexedX, &CPU::AbsoluteIndexedX, &CPU::STA, 5, 3 };
-	ret[0x9e] = { "SHX", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
-	ret[0x9f] = { "AHX", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0x9e] = { "SHX", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
+	ret[0x9f] = { "AHX", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 
 	ret[0xa0] = { "LDY", AdressingMode::Immediate, &CPU::Immediate, &CPU::LDY, 2, 2 };
 	ret[0xa1] = { "LDA", AdressingMode::IndexedIndirectX, &CPU::IndexedIndirectX, &CPU::LDA, 6, 2 };
@@ -202,7 +202,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0xb0] = { "BCS", AdressingMode::Relative, &CPU::Relative, &CPU::BCS, 2, 2 };
 	ret[0xb1] = { "LDA", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::LDA, 5, 2 };
-	ret[0xb2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0xb2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0xb3] = { "LAX", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::LAX, 5, 2 };
 	ret[0xb4] = { "LDY", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::LDY, 4, 2 };
 	ret[0xb5] = { "LDA", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::LDA, 4, 2 };
@@ -211,7 +211,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 	ret[0xb8] = { "CLV", AdressingMode::Implied, &CPU::Implied, &CPU::CLV, 2, 1 };
 	ret[0xb9] = { "LDA", AdressingMode::AbsoluteIndexedY, &CPU::AbsoluteIndexedY, &CPU::LDA, 4, 3 };
 	ret[0xba] = { "TSX", AdressingMode::Implied, &CPU::Implied, &CPU::TSX, 2, 1 };
-	ret[0xbb] = { "LAS", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0xbb] = { "LAS", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0xbc] = { "LDY", AdressingMode::AbsoluteIndexedX, &CPU::AbsoluteIndexedX, &CPU::LDY, 4, 3 };
 	ret[0xbd] = { "LDA", AdressingMode::AbsoluteIndexedX, &CPU::AbsoluteIndexedX, &CPU::LDA, 4, 3 };
 	ret[0xbe] = { "LDX", AdressingMode::AbsoluteIndexedY, &CPU::AbsoluteIndexedY, &CPU::LDX, 4, 3 };
@@ -236,7 +236,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0xd0] = { "BNE", AdressingMode::Relative, &CPU::Relative, &CPU::BNE, 2, 2 };
 	ret[0xd1] = { "CMP", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::CMP, 5, 2 };
-	ret[0xd2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0xd2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0xd3] = { "DCP", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::DCP, 5, 2 };
 	ret[0xd4] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0xd5] = { "CMP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::CMP, 4, 2 };
@@ -270,7 +270,7 @@ std::unique_ptr<CPU::Opcode[]> CPU::CreateOpcodeMatrix()
 
 	ret[0xf0] = { "BEQ", AdressingMode::Relative, &CPU::Relative, &CPU::BEQ, 2, 2 };
 	ret[0xf1] = { "SBC", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::SBC, 5, 2 };
-	ret[0xf2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::NOP, -1, 1 }; // Not implemented
+	ret[0xf2] = { "STP", AdressingMode::Implied, &CPU::Implied, &CPU::Unimplemented, 1, 1 }; // Not implemented
 	ret[0xf3] = { "ISC", AdressingMode::IndirectIndexedY, &CPU::IndirectIndexedY, &CPU::ISC, 8, 2 };
 	ret[0xf4] = { "NOP", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::NOP, 4, 2 }; // aka IGN
 	ret[0xf5] = { "SBC", AdressingMode::ZeroPageIndexedX, &CPU::ZeroPageIndexedX, &CPU::SBC, 4, 2 };

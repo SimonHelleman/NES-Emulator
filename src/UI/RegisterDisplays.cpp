@@ -5,14 +5,14 @@ void RenderCPURegisters(const CPU& cpu)
 {
 	ImGui::Begin("CPU Registers");
 	{
-		ImGui::Text("A:  %02x", cpu.GetA());
-		ImGui::Text("X:  %02x", cpu.GetX());
-		ImGui::Text("Y:  %02x", cpu.GetY());
-		ImGui::Text("SP: %02x", cpu.GetSP());
-		ImGui::Text("PC: %04x", cpu.GetProgramCounter());
+		ImGui::Text("A:  %02x", cpu.AReg());
+		ImGui::Text("X:  %02x", cpu.XReg());
+		ImGui::Text("Y:  %02x", cpu.YReg());
+		ImGui::Text("SP: %02x", cpu.StackPtr());
+		ImGui::Text("PC: %04x", cpu.ProgramCounter());
 
 		char flags[9];
-		const uint8_t status = cpu.GetStatusReg();
+		const uint8_t status = cpu.StatusReg();
 		flags[0] = status & CPU::STATUS_N ? 'N' : '-';
 		flags[1] = status & CPU::STATUS_V ? 'V' : '-';
 		flags[2] = status & CPU::STATUS_5 ? '5' : '-';

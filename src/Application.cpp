@@ -174,11 +174,9 @@ void Application::RenderUI()
 	{
 		if (ImGui::Button("Write Disassembly"))
 		{
-			std::string path;
-
 			if (FileDialogs::Available())
 			{
-				path = FileDialogs::SaveFileDialog("Assembly Source (*.s)\0*.s\0");
+				const std::string path = FileDialogs::SaveFileDialog("Assembly Source (*.s)\0*.s\0");
 				if (!path.empty())
 				{
 					_system.GetDissembler()->WriteToFile(path.c_str());
@@ -212,7 +210,7 @@ void Application::RenderCartridge()
 		{
 			if (ImGui::Button("Open ROM"))
 			{
-				std::string filepath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
+				const std::string filepath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
 				if (!filepath.empty())
 				{
 					_cart = Cartridge(filepath.c_str());

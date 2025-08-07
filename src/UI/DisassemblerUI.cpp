@@ -14,7 +14,7 @@ void RenderDisassembler(const Disassembler& disassembler)
 				ImGui::TableNextColumn();
 				ImGui::Text("%04x", instruction[i].address);
 				ImGui::TableNextColumn();
-				ImGui::Text(Disassembler::GetDisassemblyLine(instruction[i]).c_str());
+				ImGui::Text(Disassembler::MakeDisassemblyLine(instruction[i]).c_str());
 			}
 			ImGui::EndTable();
 		}

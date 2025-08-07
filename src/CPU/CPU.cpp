@@ -1,4 +1,8 @@
+#include <utility>
+#include <cstring>
+#include <sstream>
 #include "CPU.h"
+
 
 void CPU::Clock()
 {
@@ -49,26 +53,18 @@ void CPU::Clock()
 		}
 
 		_currentInstruction.operation(this);
-		_currentState = State::Fetch;
-		_isInstFinished = true;
-
-		if (_doNMI)
-		{
-			HandleNMI();
-		}
-
-		AddToDisassembly();
+		SetupNextInstruction();
 	}
 }
 
 void CPU::FetchInstruction()
 {
-	uint8_t opcode = _memory.Read(_regPC++);
+	_currentOpcode = _memory.Read(_regPC++);
 
 	// The copy is intentional since operations
 	// that need more than one clock cycle will modify
 	// the cycle count
-	_currentInstruction = _opcodeMatrix[opcode];
+	_currentInstruction = _opcodeMatrix[_currentOpcode];
 }
 
 void CPU::Reset()
@@ -93,7 +89,7 @@ void CPU::IRQ()
 
 	if (_isInstFinished)
 	{
-		HandleIRQ();
+		SetupIRQ();
 		AddToDisassembly();
 	}
 }
@@ -102,13 +98,13 @@ void CPU::NMI()
 {
 	if (_isInstFinished)
 	{
-		HandleNMI();
+		SetupNMI();
 		AddToDisassembly();
 	}
 	_doNMI = true;
 }
 
-void CPU::HandleIRQ()
+void CPU::SetupIRQ()
 {
 	// Push return address to stack
 	_memory.Write(0x0100 | _regSP--, _regPC >> 8);
@@ -122,7 +118,7 @@ void CPU::HandleIRQ()
 	
 }
 
-void CPU::HandleNMI()
+void CPU::SetupNMI()
 {
 	// Push return address to stack
 	_memory.Write(0x0100 | _regSP--, _regPC >> 8);
@@ -135,18 +131,48 @@ void CPU::HandleNMI()
 	_regPC = _currentAddr;
 }
 
+void CPU::SetupNextInstruction()
+{
+	_currentState = State::Fetch;
+	_isInstFinished = true;
+
+	if (_doNMI)
+	{
+		SetupNMI();
+	}
+
+	AddToDisassembly();
+}
+
 void CPU::AddToDisassembly()
 {
 	if (_disassembler != nullptr)
 	{
-		Opcode inst = _opcodeMatrix[_memory.Read(_regPC, true)];
+		const Opcode inst = _opcodeMatrix[_memory.Read(_regPC, true)];
 		_disassembler->AddInstruction(_regPC, inst.mnemonic, inst.size, inst.addrMode);
 	}
 }
 
+void CPU::Unimplemented()
+{
+	std::pair<Disassembler::Instruction, bool> inst;
+	inst.second = false;
+
+	if (_disassembler != nullptr)
+	{
+		inst.first = _disassembler->GetLatestInstruction();
+		inst.second = true;
+	}
+	
+	const uint8_t currentOpcode = _currentOpcode;
+	SetupNextInstruction();
+
+	throw UnimplementedInstructionException(currentOpcode, inst);
+}
+
 void CPU::BRK()
 {
-	HandleIRQ();
+	SetupIRQ();
 	_regStatus |= STATUS_B;
 }
 
@@ -162,8 +188,8 @@ void CPU::JSR()
 void CPU::RTI()
 {
 	_regStatus = _memory.Read(0x100 | ++_regSP);
-	uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
-	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
+	const uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
+	const uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
 
 	_regStatus &= ~STATUS_B;
 	_regPC = retAddrHigh << 8 | retAddrLow;
@@ -171,8 +197,8 @@ void CPU::RTI()
 
 void CPU::RTS()
 {
-	uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
-	uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
+	const uint8_t retAddrLow = _memory.Read(0x0100 | ++_regSP);
+	const uint8_t retAddrHigh = _memory.Read(0x0100 | ++_regSP);
 
 	_regPC = (retAddrHigh << 8 | retAddrLow) + 1;
 }
@@ -624,50 +650,62 @@ void CPU::TSX()
 
 void CPU::SLO()
 {
+	Unimplemented();
 }
 
 void CPU::RLA()
 {
+	Unimplemented();
 }
 
 void CPU::SRE()
 {
+	Unimplemented();
 }
 
 void CPU::RRA()
 {
+	Unimplemented();
 }
 
 void CPU::SAX()
 {
+	Unimplemented();
 }
 
 void CPU::LAX()
 {
+	Unimplemented();
 }
 
 void CPU::DCP()
 {
+	Unimplemented();
 }
 
 void CPU::ISC()
 {
+	Unimplemented();
 }
 
 void CPU::ANC()
 {
+	Unimplemented();
 }
 
 void CPU::ALR()
 {
+	Unimplemented();
 }
 
 void CPU::ARR()
 {
+	Unimplemented();
 }
 
 void CPU::AXS()
 {
+	Unimplemented();
 }
 
 void CPU::Accumulator()
@@ -751,20 +789,43 @@ void CPU::Indirect()
 
 void CPU::IndexedIndirectX()
 {
-	const uint8_t ptrLow = _memory.Read(_regPC++);
+	const uint16_t ptrLow = ((uint16_t)(_memory.Read(_regPC++)) + _regX) % 256;
 
-	const uint8_t addrLow = _memory.Read(ptrLow + _regX & 0x00ff);
-	const uint8_t addrHigh = _memory.Read(ptrLow + _regX + 1 & 0x00ff);
+	const uint8_t addrLow = _memory.Read(ptrLow);
+	const uint8_t addrHigh = _memory.Read((ptrLow + 1) % 256);
 
 	_currentAddr = (addrHigh << 8) | addrLow;
 }
 
 void CPU::IndirectIndexedY()
 {
-	const uint16_t ptrLow = _memory.Read(_regPC++);
+	const uint8_t ptrLow = _memory.Read(_regPC++);
 
-	const uint8_t addrLow = _memory.Read(ptrLow & 0x00ff);
+	const uint8_t addrLow = _memory.Read(ptrLow);
 	const uint8_t addrHigh = _memory.Read((ptrLow + 1) & 0x00ff);
 
 	_currentAddr = ((addrHigh << 8) | addrLow) + _regY;
+}
+
+CPU::UnimplementedInstructionException::UnimplementedInstructionException(uint8_t opcode, std::pair<Disassembler::Instruction, bool> inst)
+	: _what()
+{
+	std::stringstream ss;
+	ss << "[UnimplemntedInstructionException] ";
+
+	char opTxt[4];
+	snprintf(opTxt, 4, "%02x", opcode);
+	ss << "Opcode " << opTxt;
+
+	if (inst.second)
+	{
+		ss << ' ' << Disassembler::MakeDisassemblyLine(inst.first);
+	}
+
+	_what = ss.str();
+}
+
+const char* CPU::UnimplementedInstructionException::what() const noexcept
+{
+	return _what.c_str();
 }

@@ -43,16 +43,16 @@ void Disassembler::WriteToFile(const char* filepath) const
 		char addrStr[8];
 
 		snprintf(addrStr, 8, "%04x", i.first);
-		file << addrStr << "    " << GetDisassemblyLine(i.second) << '\n';
+		file << addrStr << "    " << MakeDisassemblyLine(i.second) << '\n';
 	}
 }
 
-std::string Disassembler::GetDisassemblyLine(const Instruction& inst)
+std::string Disassembler::MakeDisassemblyLine(const Instruction& inst)
 {
-	constexpr size_t bufferSize = 64;
-	char buf[bufferSize];
+	constexpr size_t BUF_SIZE = 64;
+	char buf[BUF_SIZE];
 
-	snprintf(buf, bufferSize, "%s ", inst.mnemonic);
+	snprintf(buf, BUF_SIZE, "%s ", inst.mnemonic);
 	if (inst.numOperands == 0)
 	{
 		return std::string(buf);
@@ -64,27 +64,27 @@ std::string Disassembler::GetDisassemblyLine(const Instruction& inst)
 	{
 		if (inst.addrMode == AdressingMode::Immediate)
 		{
-			snprintf(buf, bufferSize, "#%d", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "#%d", inst.operands[0]);
 		}
 		else if (inst.addrMode == AdressingMode::ZeroPageIndexedX)
 		{
-			snprintf(buf, bufferSize, "$%02x, x", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "$%02x, x", inst.operands[0]);
 		}
 		else if (inst.addrMode == AdressingMode::ZeroPageIndexedY)
 		{
-			snprintf(buf, bufferSize, "$%02x, y", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "$%02x, y", inst.operands[0]);
 		}
 		else if (inst.addrMode == AdressingMode::IndexedIndirectX)
 		{
-			snprintf(buf, bufferSize, "($%02x, x)", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "($%02x, x)", inst.operands[0]);
 		}
 		else if (inst.addrMode == AdressingMode::IndirectIndexedY)
 		{
-			snprintf(buf, bufferSize, "($%02x), y", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "($%02x), y", inst.operands[0]);
 		}
 		else
 		{
-			snprintf(buf, bufferSize, "$%02x", inst.operands[0]);
+			snprintf(buf, BUF_SIZE, "$%02x", inst.operands[0]);
 		}
 
 		ret += buf;
@@ -96,19 +96,19 @@ std::string Disassembler::GetDisassemblyLine(const Instruction& inst)
 
 	if (inst.addrMode == AdressingMode::Absolute)
 	{
-		snprintf(buf, bufferSize, "$%04x", absAddr);
+		snprintf(buf, BUF_SIZE, "$%04x", absAddr);
 	}
 	else if (inst.addrMode == AdressingMode::AbsoluteIndexedX)
 	{
-		snprintf(buf, bufferSize, "$%04x, x", absAddr);
+		snprintf(buf, BUF_SIZE, "$%04x, x", absAddr);
 	}
 	else if (inst.addrMode == AdressingMode::AbsoluteIndexedY)
 	{
-		snprintf(buf, bufferSize, "$%04x, y", absAddr);
+		snprintf(buf, BUF_SIZE, "$%04x, y", absAddr);
 	}
 	else if (inst.addrMode == AdressingMode::Indirect)
 	{
-		snprintf(buf, bufferSize, "($%04x)", absAddr);
+		snprintf(buf, BUF_SIZE, "($%04x)", absAddr);
 	}
 
 	ret += buf;

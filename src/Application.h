@@ -77,7 +77,5 @@ private:
 	bool _logIncludeError = true;
 
 	std::vector<std::pair<std::string, LogLevel>> _log;
-
-	
 };
 
