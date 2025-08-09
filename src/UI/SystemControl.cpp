@@ -10,6 +10,11 @@ void SystemControl::Render()
 		ImGui::Checkbox("Run", &_run);
 		_system.Run(_run);
 
+		if (ImGui::Button("Reset"))
+		{
+			_system.Reset();
+		}
+
 		if (ImGui::Button("Clock Step"))
 		{
 			_system.ClockStep();

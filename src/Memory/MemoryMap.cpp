@@ -25,3 +25,18 @@ std::string MemoryMap::HexDump()
 
 	return ss.str();
 }
+
+void CPUMemoryMap::Reset()
+{
+	_ram = std::make_unique<uint8_t[]>(RAM_SIZE);
+}
+
+void PPUMemoryMap::Reset()
+{
+	_nametableRAM = std::make_unique<uint8_t[]>(NAMETABLE_RAM_SIZE);
+	
+	for (size_t i = 0; i < PALLET_RAM_SIZE; ++i)
+	{
+		_palletRAM[i] = 0;
+	}
+}

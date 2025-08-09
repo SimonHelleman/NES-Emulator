@@ -14,6 +14,8 @@ public:
 	virtual uint8_t Read(uint16_t addr, bool silent = false) const = 0;
 	virtual void Write(uint16_t addr, uint8_t data) = 0;
 
+	virtual void Reset() = 0;
+
 	virtual ~MemoryMap() = default;
 
 	std::string HexDump();
@@ -38,6 +40,8 @@ public:
 		_programROM = std::move(programROM);
 		_programROMSize = programROMSize;
 	}
+
+	virtual void Reset() override;
 
 public:
 	static constexpr size_t RAM_SIZE = 2048;
@@ -74,6 +78,8 @@ public:
 	{
 		_mirroringMode = mirroring;
 	}
+
+	virtual void Reset() override;
 
 public:
 	static constexpr size_t PALLET_RAM_SIZE = 32;

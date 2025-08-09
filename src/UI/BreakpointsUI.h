@@ -15,6 +15,6 @@ public:
 
 private:
 	System& _system;
-	char _breakpointText[8];
+	char _breakpointText[8] = {};
 	bool _enableBreakpoints = true;
 };

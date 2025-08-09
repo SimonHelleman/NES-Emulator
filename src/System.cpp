@@ -44,6 +44,8 @@ void System::ChangeCartridge(Cartridge& cart)
 
 void System::Reset()
 {
+	_memoryCPU->Reset();
+	_memoryPPU->Reset();
 	_disassembler->Clear();
 	_cpu->Reset();
 	_ppu->Reset();
