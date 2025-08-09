@@ -5,7 +5,7 @@ int main(int argc, char** argv)
 {
 	std::cout << "hello world\n";
 
-	Application& app = Application::Get();
+	Application app;
 
 	if (argc == 2)
 	{

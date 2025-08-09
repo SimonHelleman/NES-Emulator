@@ -15,15 +15,16 @@
 class Application
 {
 public:
+	Application();
+	~Application() = default;
 
-	friend class FileDialogs;
+	Application(const Application&) = delete;
+	Application& operator=(const Application&) = delete;
 
-	static Application& Get()
-	{
-		static Application app;
-		return app;
-	}
+	Application(Application&&) = delete;
+	Application& operator=(Application&&) = delete;
 
+public:
 	void Run();
 
 	void SetCartridge(const char* filepath);
@@ -34,17 +35,8 @@ private:
 	void RenderCartridge();
 	void RenderLog();
 
-private:
-	Application();
-	~Application();
-
-	Application(const Application&) = delete;
-	Application& operator=(const Application&) = delete;
-
-	Application(Application&&) = delete;
-	Application& operator=(Application&&) = delete;
-
-	static void ResizeCallback(GLFWwindow*, int width, int height);
+public:
+	friend void ResizeCallback(GLFWwindow* window, int width, int height);
 
 private:
 	const char* _windowTitle = "NES Emulator";

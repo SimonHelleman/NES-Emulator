@@ -8,6 +8,15 @@
 #include "UI/IODisplays.h"
 #include "Application.h"
 
+static void ResizeCallback(GLFWwindow* window, int width, int height)
+{
+	Application* app = (Application*)glfwGetWindowUserPointer(window);
+	app->_windowWidth = width;
+	app->_windowHeight = height;
+
+	glViewport(0, 0, width, height);
+}
+
 Application::Application()
 	: _cart(), _system(_cart), _palettes(*_system.GetPPU()), _patternTables(*_system.GetPPU()),
 	  _control(_system), _breakpoints(_system)
@@ -43,6 +52,8 @@ Application::Application()
 		glfwTerminate();
 		return;
 	}
+
+	glfwSetWindowUserPointer(_window, this);
 
 	glfwMakeContextCurrent(_window);
 
@@ -176,7 +187,7 @@ void Application::RenderUI()
 		{
 			if (FileDialogs::Available())
 			{
-				const std::string path = FileDialogs::SaveFileDialog("Assembly Source (*.s)\0*.s\0");
+				const std::string path = FileDialogs::SaveFileDialog(_window, "Assembly Source (*.s)\0*.s\0");
 				if (!path.empty())
 				{
 					_system.GetDissembler()->WriteToFile(path.c_str());
@@ -210,7 +221,7 @@ void Application::RenderCartridge()
 		{
 			if (ImGui::Button("Open ROM"))
 			{
-				const std::string filepath = FileDialogs::OpenFileDialog("NES ROM (*.nes)\0*.nes\0");
+				const std::string filepath = FileDialogs::OpenFileDialog(_window, "NES ROM (*.nes)\0*.nes\0");
 				if (!filepath.empty())
 				{
 					_cart = Cartridge(filepath.c_str());
@@ -280,16 +291,4 @@ void Application::RenderLog()
 		ImGui::EndChild();
 	}
 	ImGui::End();
-}
-
-Application::~Application()
-{
-}
-
-void Application::ResizeCallback(GLFWwindow*, int width, int height)
-{
-	Application& app = Application::Get();
-	app._windowWidth = width;
-	app._windowHeight = height;
-	glViewport(0, 0, width, height);
 }

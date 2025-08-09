@@ -86,5 +86,5 @@ private:
 	unsigned int _width;
 	unsigned int _height;
 	
-	RGBA* _data;
+	RGBA* _data = nullptr;
 };

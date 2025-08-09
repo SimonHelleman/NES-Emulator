@@ -3,7 +3,6 @@
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
-#include "Application.h"
 #include "Util/FileDialogs.h"
 
 bool FileDialogs::Available()
@@ -11,15 +10,14 @@ bool FileDialogs::Available()
 	return true;
 }
 
-std::string FileDialogs::OpenFileDialog(const char* filter)
+std::string FileDialogs::OpenFileDialog(GLFWwindow* windowHandle, const char* filter)
 {
 	OPENFILENAMEA dialog = { 0 };
 	char path[MAX_PATH] = { 0 };
 	char dir[MAX_PATH] = { 0 };
 	dialog.lStructSize = sizeof(OPENFILENAME);
 
-	Application& app = Application::Get();
-	dialog.hwndOwner = glfwGetWin32Window(app._window);
+	dialog.hwndOwner = glfwGetWin32Window(windowHandle);
 	dialog.lpstrFile = path;
 	dialog.nMaxFile = sizeof(path);
 
@@ -42,16 +40,14 @@ std::string FileDialogs::OpenFileDialog(const char* filter)
 	return "";
 }
 
-std::string FileDialogs::SaveFileDialog(const char* filter)
+std::string FileDialogs::SaveFileDialog(GLFWwindow* windowHandle, const char* filter)
 {
 	OPENFILENAMEA dialog = { 0 };
 	char path[MAX_PATH] = { 0 };
 	char dir[MAX_PATH] = { 0 };
 	dialog.lStructSize = sizeof(OPENFILENAME);
 
-	Application& app = Application::Get();
-	dialog.hwndOwner = glfwGetWin32Window(app._window);
-
+	dialog.hwndOwner = glfwGetWin32Window(windowHandle);
 	dialog.lpstrFile = path;
 	dialog.nMaxFile = sizeof(path);
 
