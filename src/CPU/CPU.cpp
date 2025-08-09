@@ -774,6 +774,10 @@ void CPU::Relative()
 	_branchOffset = _memory.Read(_regPC++);
 }
 
+// Turns out there there is a hardware bug here when
+// the target crosses a page boundary, in this case,
+// it will take the high address from the beginning of the
+// previous page instead of wrapping
 void CPU::Indirect()
 {
 	const uint8_t ptrLow = _memory.Read(_regPC++);
@@ -782,7 +786,9 @@ void CPU::Indirect()
 	const uint16_t ptr = (ptrHigh << 8) | ptrLow;
 
 	const uint8_t addrLow = _memory.Read(ptr);
-	const uint8_t addrHigh = _memory.Read(ptr + 1);
+	// Get addr high from previous page (-256) 
+	// if there is a page boundary cross, otherwise be normal
+	const uint8_t addrHigh = ptrLow == 0xff ? _memory.Read((ptr + 1) - 256) : _memory.Read(ptr + 1);
 
 	_currentAddr = (addrHigh << 8) | addrLow;
 }
