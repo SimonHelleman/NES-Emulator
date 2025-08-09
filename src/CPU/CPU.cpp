@@ -248,7 +248,7 @@ void CPU::CPX()
 
 void CPU::PHP()
 {
-	_memory.Write(0x0100 | _regSP--, _regStatus);
+	_memory.Write(0x0100 | _regSP--, _regStatus | STATUS_B | STATUS_5);
 }
 
 void CPU::PLP()
@@ -725,12 +725,14 @@ void CPU::ZeroPage()
 
 void CPU::ZeroPageIndexedX()
 {
-	_currentAddr = _memory.Read(_regPC++) + _regX;
+	// AND with 0x00ff to prevent page boundary crossing
+	_currentAddr = (_memory.Read(_regPC++) + _regX) & 0x00ff;
 }
 
 void CPU::ZeroPageIndexedY()
 {
-	_currentAddr = _memory.Read(_regPC++) + _regY;
+	// AND with 0x00ff to prevent page boundary crossing
+	_currentAddr = (_memory.Read(_regPC++) + _regY) & 0x00ff;
 }
 
 void CPU::Absolute()

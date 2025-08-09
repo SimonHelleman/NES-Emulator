@@ -40,7 +40,7 @@ void CPUMapper0::Write(uint16_t addr, uint8_t data)
 {
 	if (addr == 0 && data != 0)
 	{
-		INFO(std::string("nestest fail: ") + Int8HexString(data));
+		//INFO(std::string("nestest fail: ") + Int8HexString(data));
 	}
 
 	if (addr <= 0x1fff)
